@@ -34,6 +34,12 @@ public class Pistola : Arma
                     {
                         saludEnemigo.RecibirDaño(daño);
                     }
+                    ObjetoDestruible destructibleTarget = hit.collider.GetComponent<ObjetoDestruible>();
+                    if (destructibleTarget != null)
+                    {
+                        Debug.Log("Destructible object hit.");
+                        destructibleTarget.DestroyAndReplace();
+                    }
 
                     // Destruye el bullet hole después de 3 segundos
                     if (bulletHoleInstance != null)
@@ -63,6 +69,12 @@ public class Pistola : Arma
                     if (saludEnemigo != null)
                     {
                         saludEnemigo.RecibirDaño(daño);
+                    }
+                    ObjetoDestruible destructibleTarget = hit.collider.GetComponent<ObjetoDestruible>();
+                    if (destructibleTarget != null)
+                    {
+                        Debug.Log("Destructible object hit.");
+                        destructibleTarget.DestroyAndReplace();
                     }
                 }
             }

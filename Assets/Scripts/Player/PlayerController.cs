@@ -36,7 +36,9 @@ public class PlayerController : MonoBehaviour
     public float incrementoMiedo = 0.1f; // Cantidad de miedo que aumenta por frame al ver a un enemigo
     public float decrementoMiedo = 0.01f; // Cantidad de miedo que disminuye por frame cuando no ve a enemigos
     public float maxMiedo = 1f; // Máximo nivel de miedo
-
+    //Inventario
+    public Inventory playerInventory;
+    public ItemPickup currentItemPickup;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -71,8 +73,14 @@ public class PlayerController : MonoBehaviour
 
         print("Muerto");
     }
+   
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.E) && currentItemPickup != null)
+        {
+            currentItemPickup.Pickup(); // Recoge el item
+            currentItemPickup = null; // Resetea el currentItemPickup a null después de recoger
+        }
         // Maneja la entrada del mouse para la rotación
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
@@ -214,6 +222,16 @@ public class PlayerController : MonoBehaviour
             canJump = false;
         }
     }
+    public void AdjustSpeed(float amount)
+    {
+        speed += amount;
+    }
 
+    public void AdjustFearDecrement(float multiplier)
+    {
+        decrementoMiedo *= multiplier;
+    }
+   
+   
 
 }
