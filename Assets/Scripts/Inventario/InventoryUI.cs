@@ -10,6 +10,10 @@ public class InventoryUI : MonoBehaviour
 
     public static InventoryUI instance;
 
+    public float slotWidth = 100; // Ancho de un slot en píxeles
+    public float slotHeight = 100; // Alto de un slot en píxeles
+
+
     public int selectedX, selectedY;
     private void Awake()
     {

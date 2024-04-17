@@ -90,12 +90,7 @@ public class PlayerController : MonoBehaviour
         }
 
         ApplyCameraTremble(nivelDeMiedo);
-        if (Input.GetKeyDown(KeyCode.E) && currentItemPickup != null)
-        {
-            currentItemPickup.Pickup();
-            currentItemPickup = null;
-        }
-        
+       
         UpdateFearLevel();
 
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;

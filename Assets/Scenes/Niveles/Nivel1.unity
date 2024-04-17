@@ -139,7 +139,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &51298396
 RectTransform:
   m_ObjectHideFlags: 0
@@ -175,6 +175,8 @@ MonoBehaviour:
   inventoryPanel: {fileID: 1604952657}
   slotPrefab: {fileID: 3161563119365053605, guid: 788bff25cca873648b539de99d53219d,
     type: 3}
+  slotWidth: 1
+  slotHeight: 1
   selectedX: 0
   selectedY: 0
 --- !u!1001 &61026179
@@ -2525,10 +2527,6 @@ PrefabInstance:
         type: 3}
       insertIndex: -1
       addedObject: {fileID: 357757820}
-    - targetCorrespondingSourceObject: {fileID: 3435213325779099989, guid: 21ed0fe4c9b94a34988fcd3e89d6c59b,
-        type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 357757828}
   m_SourcePrefab: {fileID: 100100000, guid: 21ed0fe4c9b94a34988fcd3e89d6c59b, type: 3}
 --- !u!1 &357757819 stripped
 GameObject:
@@ -2548,29 +2546,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e806337738f5f8648ba895533acd8b2c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  item: {fileID: 357757828}
+  item: {fileID: -5645419338742432434, guid: 21ed0fe4c9b94a34988fcd3e89d6c59b, type: 3}
 --- !u!4 &357757824 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 2773658907136571266, guid: 21ed0fe4c9b94a34988fcd3e89d6c59b,
     type: 3}
   m_PrefabInstance: {fileID: 357757818}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &357757828
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 357757819}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d00a42ac3d16f6145aba70ae11906ba6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  itemName: asdasd
-  icon: {fileID: 21300000, guid: 13f17d7a31a73fd43ad8054a6e9b40e2, type: 3}
-  width: 2
-  height: 4
 --- !u!1 &398801570
 GameObject:
   m_ObjectHideFlags: 0

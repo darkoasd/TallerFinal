@@ -90,8 +90,14 @@ public class Inventory : MonoBehaviour
     
     private void UpdateInventoryUI()
     {
-        // Actualiza la UI si es necesario
-        // Este método debería actualizar visualmente los slots del inventario
+        if (InventoryUI.instance != null)
+        {
+            InventoryUI.instance.UpdateInventoryUI();
+        }
+        else
+        {
+            Debug.LogError("InventoryUI instance is not found when trying to update inventory.");
+        }
 
     }
 }

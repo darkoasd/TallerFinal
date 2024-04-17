@@ -12,6 +12,11 @@ public class InventorySlotsUI : MonoBehaviour
     {
         icon.sprite = item.icon;
         icon.enabled = true;
+
+        // Ajustar el tamaño y posición del ícono
+        RectTransform rt = icon.GetComponent<RectTransform>();
+        rt.sizeDelta = new Vector2(item.width * InventoryUI.instance.slotWidth, item.height * InventoryUI.instance.slotHeight);
+        rt.anchoredPosition = new Vector2((item.width * InventoryUI.instance.slotWidth) / 2, -(item.height * InventoryUI.instance.slotHeight) / 2);
     }
 
     public void ClearSlot()
