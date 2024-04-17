@@ -7,13 +7,23 @@ public class ItemPickup : MonoBehaviour
 
     public Item item; // Asigna esto en el inspector de Unity, asegurándote de que se trata de un objeto de tipo Item.
 
+    private bool isPlayerNearby = false;
+    private PlayerController playerController;
 
+    private void Update()
+    {
+        if (isPlayerNearby && Input.GetKeyDown(KeyCode.E))
+        {
+            Pickup();
+        }
+    }
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            // Solo marca el item como disponible para recoger
-            other.GetComponent<PlayerController>().currentItemPickup = this;
+            isPlayerNearby = true;
+            playerController = other.GetComponent<PlayerController>();
+            playerController.currentItemPickup = this;  // Opcional, depende de tu lógica
         }
     }
 
@@ -21,21 +31,21 @@ public class ItemPickup : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            // Marca el item como no disponible para recoger si el jugador se aleja
-            other.GetComponent<PlayerController>().currentItemPickup = null;
+            isPlayerNearby = false;
+            playerController.currentItemPickup = null;  // Opcional, depende de tu lógica
         }
     }
 
     public void Pickup()
     {
-        if (item != null)
+        if (item != null && Inventory.instance.AddItem(item))  // Asumiendo que AddItem ahora devuelve true si fue exitoso
         {
-            Inventory.instance.AddItem(item); // Usa el singleton instance para acceder a Inventory
-            Destroy(gameObject); // Destruye el objeto después de recogerlo
+            Destroy(gameObject);  // Destruye el objeto después de recogerlo
         }
         else
         {
-            Debug.LogWarning("Attempted to pick up a null item.");
+            Debug.LogWarning("No space to pick up the item or item is null.");
         }
     }
+
 }

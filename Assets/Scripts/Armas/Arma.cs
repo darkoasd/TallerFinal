@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public abstract class Arma : MonoBehaviour
 {
     public float daño = 10f; // Daño causado por el arma
@@ -21,13 +22,21 @@ public abstract class Arma : MonoBehaviour
     public int municionEnCargador;
     public int municionDeReserva;
     public int capacidadCargador = 30;
-
+    //camera
+    public Transform cameraTransform; // Referencia a la transformada de la cámara
+    public float maxVerticalAngle = 10f; // Ángulo máximo hacia arriba
+    public float minVerticalAngle = -10f; // Ángulo máximo hacia abajo
     //UI
     public GameObject crosshair;
-    
+
     public Animator animator;
     protected virtual void Start()
     {
+        // Inicialización existente...
+        if (cameraTransform == null)
+        {
+            cameraTransform = Camera.main.transform; // Asegura que hay una referencia a la cámara
+        }
         tiempoUltimoDisparo = -tiempoEntreDisparos;
         precisionActual = precisionDesdeCadera;
         municionEnCargador = capacidadCargador;
@@ -83,45 +92,33 @@ public abstract class Arma : MonoBehaviour
     {
         apuntando = true;
         precisionActual = precisionApuntado;
-        // Cambia la escala del crosshair
+
+        // Oculta el crosshair cuando el jugador está apuntando
         if (crosshair != null)
         {
-            crosshair.transform.localScale = new Vector3(1, 1, 1); // Cambia la escala del crosshair a 1 cuando el jugador está apuntando
+            crosshair.SetActive(false);
         }
+
         // Cambia la animación a apuntando
-        if (animator != null) animator.SetBool("Apuntando", true);
+        if (animator != null)
+        {
+            animator.SetBool("Apuntando", true);
+        }
     }
     public void ActualizarEstadoDeApuntado(bool estaApuntando, float nivelDeMiedo, float maxMiedo)
     {
         apuntando = estaApuntando;
-
-        // Si está apuntando y el nivel de miedo es bajo, establece precisión perfecta
-        if (apuntando && nivelDeMiedo <= umbralDeMiedo)
-        {
-            precisionActual = 1.0f; // Asume que 1.0f representa la precisión perfecta
-        }
-        else if (apuntando) // Si está apuntando pero tiene algo de miedo
-        {
-            // Ajusta la precisión según el nivel de miedo, aún cuando se está apuntando
-            precisionActual = Mathf.Lerp(precisionApuntado, precisionDesdeCadera, nivelDeMiedo / maxMiedo);
-        }
-        else if (nivelDeMiedo > umbralDeMiedo) // No está apuntando y tiene miedo
-        {
-            precisionActual = precisionDesdeCadera * factorReduccionMiedo;
-        }
-        else // Caso base, no está apuntando y no tiene miedo
-        {
-            precisionActual = precisionDesdeCadera;
-        }
+        precisionActual = estaApuntando ? precisionApuntado : precisionDesdeCadera;
     }
     public void DejarDeApuntar()
     {
         apuntando = false;
         precisionActual = precisionDesdeCadera;
-        // Cambia la escala del crosshair
+
+        // Muestra el crosshair cuando el jugador no está apuntando
         if (crosshair != null)
         {
-            crosshair.transform.localScale = new Vector3(2, 2, 2); // Cambia la escala del crosshair a 2 cuando el jugador no está apuntando
+            crosshair.SetActive(true);
         }
         // Cambia la animación a idle
         if (animator != null) animator.SetBool("Apuntando", false);
@@ -140,6 +137,8 @@ public abstract class Arma : MonoBehaviour
     // Este método actualizará el estado del arma cada frame
     protected virtual void Update()
     {
+      
+
         // Comprueba si el jugador está presionando o soltando el botón derecho del ratón
         if (Input.GetButtonDown("Fire2"))
         {
@@ -150,4 +149,5 @@ public abstract class Arma : MonoBehaviour
             DejarDeApuntar();
         }
     }
+   
 }

@@ -5,14 +5,10 @@ using UnityEngine.UI;
 
 public class Inventory : MonoBehaviour
 {
-    public int slotsCount = 20;
-    public GameObject slotPrefab;
-    public Transform slotsParent;
-    private List<GameObject> slots = new List<GameObject>();
-    private List<Item> items = new List<Item>(); // Lista para manejar los items
-
-    public static Inventory instance;
-
+    public int width = 10;
+    public int height = 6;
+    public ItemSlots[,] slots;
+    public static Inventory instance; 
     void Awake()
     {
         if (instance != null)
@@ -21,90 +17,81 @@ public class Inventory : MonoBehaviour
             return;
         }
         instance = this;
-    }
-    void Start()
-    {
         InitializeSlots();
     }
-
-    void InitializeSlots()
+    private void InitializeSlots()
     {
-        for (int i = 0; i < slotsCount; i++)
+        slots = new ItemSlots[width, height];
+        for (int x = 0; x < width; x++)
         {
-            GameObject slot = Instantiate(slotPrefab, slotsParent);
-            slot.SetActive(true); // Asegúrate de activar el slot aquí
-            slots.Add(slot);
+            for (int y = 0; y < height; y++)
+            {
+                slots[x, y] = new ItemSlots(); // Asegúrate de que ItemSlot pueda manejar estados como vacío u ocupado
+            }
         }
     }
-
-    public void AddItem(Item itemToAdd)
+    public ItemSlots GetSlot(int x, int y)
     {
-        if (items.Count < slotsCount)
+        if (x >= 0 && x < width && y >= 0 && y < height)
         {
-            items.Add(itemToAdd); // Añade el item a la lista
-            UpdateSlotUI(); // Actualiza la UI de los slots
+            return slots[x, y];
         }
         else
         {
-            Debug.Log("Inventory is full.");
+            return null; // Retorna null si las coordenadas están fuera del rango
         }
     }
-
-    public void RemoveItem(Item itemToRemove)
+    public bool CanAddItem(Item item, int startX, int startY)
     {
-        if (items.Remove(itemToRemove))
-        {
-            UpdateSlotUI(); // Actualiza la UI si se remueve un item
-        }
-    }
+        if (startX + item.width > width || startY + item.height > height)
+            return false;
 
-    void UpdateSlotUI()
-    {
-        // Asegúrate de que todos los slots estén desactivados inicialmente
-        foreach (var slot in slots)
+        for (int x = startX; x < startX + item.width; x++)
         {
-            slot.SetActive(false);
-        }
-
-        // Activa y actualiza solo los slots que tienen items
-        for (int i = 0; i < slotsCount; i++)
-        {
-            if (i < items.Count)
+            for (int y = startY; y < startY + item.height; y++)
             {
-                // Hay un item para este slot, así que actualiza la información del slot
-                slots[i].SetActive(true); // Asegura que el slot esté activo
-                slots[i].GetComponent<Image>().sprite = items[i].icon; // Actualiza el ícono
-                slots[i].GetComponent<Image>().enabled = true; // Asegura que el ícono esté visible
-                                                               // Si también muestras cantidades o tienes más información para actualizar, hazlo aquí
-            }
-            else
-            {
-                // No hay un item para este slot, así que configura el slot como vacío
-                slots[i].SetActive(true); // Aún así, mantén el slot activo
-                slots[i].GetComponent<Image>().sprite = null; // No hay ícono para mostrar
-                slots[i].GetComponent<Image>().enabled = false; // Desactiva el ícono ya que el slot está vacío
-                                                                // Asegúrate de limpiar cualquier otra información del slot aquí
+                if (slots[x, y].IsOccupied)
+                    return false;
             }
         }
+        return true;
     }
-    void Update()
+
+    public bool AddItem(Item item)
     {
-        for (int i = 0; i < 9; i++)
+        for (int x = 0; x < width; x++)
         {
-            if (Input.GetKeyDown(KeyCode.Alpha1 + i))
+            for (int y = 0; y < height; y++)
             {
-                // Cambiar el item seleccionado a items[i] si es que existe en la barra
-                if (i < items.Count)
+                if (CanAddItem(item, x, y))
                 {
-                    UseItem(items[i]);
+                    Debug.Log($"Adding item at {x}, {y}");
+                    PlaceItem(item, x, y);
+                    return true;
                 }
             }
         }
+        Debug.Log("Failed to add item, no space available");
+        return false;
+    }
+    private void PlaceItem(Item item, int startX, int startY)
+    {
+        // Asumimos que CanAddItem ya verificó que el espacio es suficiente
+        for (int x = startX; x < startX + item.width; x++)
+        {
+            for (int y = startY; y < startY + item.height; y++)
+            {
+                slots[x, y].Occupy(item);  // Ocupa cada slot necesario con el item
+            }
+        }
+        UpdateInventoryUI();
     }
 
-    void UseItem(Item item)
+    
+    private void UpdateInventoryUI()
     {
-        item.Use();
-        // Aquí puedes implementar la lógica específica para usar el item
+        // Actualiza la UI si es necesario
+        // Este método debería actualizar visualmente los slots del inventario
+
     }
 }

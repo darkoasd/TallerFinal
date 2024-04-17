@@ -120,3 +120,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   itemName: Trapo
   icon: {fileID: 21300000, guid: 13f17d7a31a73fd43ad8054a6e9b40e2, type: 3}
+  width: 2
+  height: 4

@@ -6,12 +6,11 @@ public class Item : MonoBehaviour
 {
     public string itemName;
     public Sprite icon;
-    // Aquí puedes agregar más propiedades comunes, como durabilidad, cantidad, etc.
+    public int width;  // Ancho en casillas
+    public int height; // Alto en casillas
 
-    // Método para usar el item
     public virtual void Use()
     {
-        // Implementa cómo se usa este item
         Debug.Log("Using " + itemName);
     }
 }

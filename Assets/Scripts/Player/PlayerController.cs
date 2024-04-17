@@ -6,12 +6,14 @@ using Cinemachine;
 
 public class PlayerController : MonoBehaviour
 {
-    public CinemachineVirtualCamera cinemachineCamera;
+    public Camera cinemachineCamera;
     public float speed = 5.0f;
     public float mouseSensitivity = 2.0f;
     public float jumpForce = 5.0f;
-    public float maxPitch = 80.0f;
-    public float minPitch = -80.0f;
+    public float maxPitch = 90.0f;
+    public float minPitch = -90.0f;
+    float xRotation = 0f;
+    float yRotation = 0f;
     public AudioClip sonidoSalto;
     public Healthbar healthBar;
 
@@ -32,6 +34,7 @@ public class PlayerController : MonoBehaviour
     public float aimingSpeed = 2.5f; // Velocidad de movimiento más baja cuando apuntas
     private bool isAiming = false; // Controla si el jugador está apuntando
                                    //Miedo
+
     public float nivelDeMiedo = 0f;
     public float incrementoMiedo = 0.1f; // Cantidad de miedo que aumenta por frame al ver a un enemigo
     public float decrementoMiedo = 0.01f; // Cantidad de miedo que disminuye por frame cuando no ve a enemigos
@@ -39,8 +42,13 @@ public class PlayerController : MonoBehaviour
     //Inventario
     public Inventory playerInventory;
     public ItemPickup currentItemPickup;
+
+
+   
     void Start()
     {
+        rb = GetComponent<Rigidbody>();
+        rb.freezeRotation = true;
         rb = GetComponent<Rigidbody>();
         currentHealth = maxHealth;
         healthBar.SetMaxHealth(maxHealth);
@@ -73,65 +81,112 @@ public class PlayerController : MonoBehaviour
 
         print("Muerto");
     }
-   
+
     void Update()
     {
+        if (Cursor.lockState != CursorLockMode.Locked)
+        {
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+
+        ApplyCameraTremble(nivelDeMiedo);
         if (Input.GetKeyDown(KeyCode.E) && currentItemPickup != null)
         {
-            currentItemPickup.Pickup(); // Recoge el item
-            currentItemPickup = null; // Resetea el currentItemPickup a null después de recoger
+            currentItemPickup.Pickup();
+            currentItemPickup = null;
         }
-        // Maneja la entrada del mouse para la rotación
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-        transform.Rotate(Vector3.up * mouseX);
-        AdjustVerticalCameraRotation(-mouseY);
+        
+        UpdateFearLevel();
 
-        // Verifica si el jugador está apuntando
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+
+        xRotation -= mouseY;
+        xRotation = Mathf.Clamp(xRotation, minPitch, maxPitch);
+        yRotation += mouseX;
+
+        // Aplica la rotación usando Quaternion directamente
+        transform.rotation = Quaternion.Euler(xRotation, yRotation, 0f);
+
         UpdateAimingStatus();
 
-        // Movimiento del jugador
         if (canMove)
         {
             MovePlayer();
         }
 
-        // Maneja la acción de saltar
         HandleJumping();
 
-        // Verifica y actualiza el nivel de miedo
-        UpdateFearLevel();
-
-        // Actualiza la precisión basada en el apuntado y el nivel de miedo
         if (armaScript != null)
         {
             armaScript.ActualizarEstadoDeApuntado(isAiming, nivelDeMiedo, maxMiedo);
         }
     }
+   
     void UpdateFearLevel()
     {
-        RaycastHit hit;
-        if (Physics.Raycast(transform.position, transform.forward, out hit, 100))
+        bool enemySeen = false;
+        int layerMask = LayerMask.GetMask("Enemy", "Obstaculos");  // Incluye las layers de enemigos y obstáculos
+        float sphereRadius = 5.0f; // Configura el radio de tu SphereCast
+
+        RaycastHit[] hits = Physics.SphereCastAll(transform.position, sphereRadius, transform.forward, 100, layerMask);
+        foreach (var hit in hits)
         {
-            // Verifica si el Raycast golpea a un enemigo y ajusta el miedo basándote en el tipo de enemigo
-            switch (hit.collider.tag)
+            if (hit.collider.CompareTag("Enemy1") || hit.collider.CompareTag("Enemy2"))
             {
-                case "Enemy1":
-                    nivelDeMiedo = Mathf.Min(nivelDeMiedo + (incrementoMiedo * 2) * Time.deltaTime, maxMiedo); // Incremento doble para EnemyType1
-                    break;
-                case "Enemy2":
-                    nivelDeMiedo = Mathf.Min(nivelDeMiedo + (incrementoMiedo * 0.5f) * Time.deltaTime, maxMiedo); // Incremento más lento para EnemyType2
-                    break;
-                default:
-                    // Si no es un tipo de enemigo específico, puedes elegir no modificar el miedo o decrementarlo
-                    nivelDeMiedo = Mathf.Max(nivelDeMiedo - decrementoMiedo * Time.deltaTime, 0);
-                    break;
+                // Verificar si hay obstáculos entre el jugador y el enemigo detectado
+                if (!IsBlockedByObstacle(transform.position, hit.point))
+                {
+                    float fearIncrement = hit.collider.CompareTag("Enemy1") ? incrementoMiedo * 2 : incrementoMiedo * 0.5f;
+                    nivelDeMiedo = Mathf.Min(nivelDeMiedo + fearIncrement * Time.deltaTime, maxMiedo);
+                    enemySeen = true;
+                    break;  // Salir del bucle si ya se ha encontrado un enemigo visible
+                }
             }
+        }
+
+        if (!enemySeen)
+        {
+            nivelDeMiedo = Mathf.Max(nivelDeMiedo - (decrementoMiedo * 2) * Time.deltaTime, 0);
+        }
+    }
+    bool IsBlockedByObstacle(Vector3 startPosition, Vector3 enemyPosition)
+    {
+        Vector3 direction = enemyPosition - startPosition;
+        float distance = direction.magnitude;
+        direction.Normalize();
+
+        // Chequea si hay un obstáculo en el camino
+        if (Physics.Raycast(startPosition, direction, out RaycastHit hit, distance, LayerMask.GetMask("Obstaculos")))
+        {
+            return true; // Hay un obstáculo
+        }
+        return false; // No hay obstáculos
+    }
+    void ApplyCameraTremble(float fearLevel)
+    {
+        // Define el umbral a la mitad del máximo miedo, que es 0.5 si maxMiedo es 1
+        float fearThreshold = 0.5f;
+
+        if (fearLevel > fearThreshold)
+        {
+            // Calcula la cantidad de temblor basada en cuánto el nivel de miedo excede el umbral
+            float trembleIntensity = (fearLevel - fearThreshold) / (maxMiedo - fearThreshold); // Esto normaliza el temblor de 0 a 1
+            float trembleAmount = trembleIntensity * 0.3f; // Controla la intensidad del temblor para que sea sutil
+
+            // Calcula variaciones aleatorias para el pitch y el yaw de la cámara
+            float tremblePitch = Random.Range(-trembleAmount, trembleAmount);
+            float trembleYaw = Random.Range(-trembleAmount, trembleAmount);
+
+            // Aplica el temblor a la rotación actual de la cámara
+            Quaternion originalRotation = cinemachineCamera.transform.localRotation;
+            cinemachineCamera.transform.localRotation = Quaternion.Euler(originalRotation.eulerAngles.x + tremblePitch, originalRotation.eulerAngles.y + trembleYaw, originalRotation.eulerAngles.z);
         }
         else
         {
-            // No se detectó a un enemigo, decrementa el miedo gradualmente
-            nivelDeMiedo = Mathf.Max(nivelDeMiedo - (decrementoMiedo * 2) * Time.deltaTime, 0); // Ajusta este decremento como prefieras
+            // Restablece la rotación de la cámara suavemente si el miedo está por debajo del umbral
+            Quaternion targetRotation = Quaternion.Euler(pitch, cinemachineCamera.transform.localEulerAngles.y, 0);
+            cinemachineCamera.transform.localRotation = Quaternion.Lerp(cinemachineCamera.transform.localRotation, targetRotation, Time.deltaTime * 5);
         }
     }
     public void EnableMovement(bool enable)
@@ -140,8 +195,21 @@ public class PlayerController : MonoBehaviour
     }
     void AdjustVerticalCameraRotation(float rotation)
     {
-        pitch = Mathf.Clamp(pitch + rotation, minPitch, maxPitch);
-        cinemachineCamera.transform.localRotation = Quaternion.Euler(pitch, 0, 0);
+        float fearThreshold = 0.5f;
+        if (nivelDeMiedo > fearThreshold)
+        {
+            float trembleIntensity = (nivelDeMiedo - fearThreshold) / (maxMiedo - fearThreshold);
+            float trembleAmount = trembleIntensity * 0.3f;
+            rotation += Random.Range(-trembleAmount, trembleAmount);
+        }
+
+
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        xRotation -= mouseY;
+        xRotation = Mathf.Clamp(xRotation, maxPitch, minPitch);
+        yRotation += mouseX;
+        transform.localRotation = Quaternion.Euler(xRotation, yRotation, 0f);
     }
 
     void UpdateAimingStatus()

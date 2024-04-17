@@ -5,23 +5,15 @@ using UnityEngine.UI;
 
 public class InventorySlots : MonoBehaviour
 {
-    public Image icon; // Referencia al ícono en el slot
-
-    Item item; // Item actual en el slot
-
-    // Método para añadir un item al slot
-    public void AddItem(Item newItem)
+    public int x, y;  // Posiciones del slot en la cuadrícula
+    public Button slotButton;
+    void Start()
     {
-        item = newItem;
-        icon.sprite = item.icon;
-        icon.enabled = true;
+        slotButton.onClick.AddListener(() => SelectSlot());
     }
 
-    // Método para limpiar el slot
-    public void ClearSlot()
+    void SelectSlot()
     {
-        item = null;
-        icon.sprite = null;
-        icon.enabled = false;
+        InventoryUI.instance.SelectSlot(x, y);
     }
 }
