@@ -6,28 +6,39 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    public GameObject inventoryUI; // Arrastra aquí el GameObject de tu inventario desde el Editor
+    public static GameManager instance;  // Singleton instance
+    public GameObject inventoryUI;       // GameObject de tu inventario
+   
 
-    // Asegúrate de que el inventario esté cerrado al inicio
-    void Start()
+    void Awake()
     {
-        inventoryUI.SetActive(false);
+        if (instance != null)
+        {
+            Debug.LogError("Más de una instancia de GameManager encontrada!");
+            return;
+        }
+        instance = this;
     }
 
-    // Actualiza se llama una vez por frame
+    void Start()
+    {
+        
+    }
+
     void Update()
     {
-        // Escucha la tecla TAB para abrir/cerrar el inventario
         if (Input.GetKeyDown(KeyCode.Tab))
         {
             ToggleInventory();
         }
     }
 
-    // Función para abrir/cerrar el inventario
     public void ToggleInventory()
     {
         bool isCurrentlyActive = inventoryUI.activeSelf;
         inventoryUI.SetActive(!isCurrentlyActive);
+
+       
     }
+
 }

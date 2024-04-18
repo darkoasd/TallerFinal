@@ -40,8 +40,7 @@ public class PlayerController : MonoBehaviour
     public float decrementoMiedo = 0.01f; // Cantidad de miedo que disminuye por frame cuando no ve a enemigos
     public float maxMiedo = 1f; // Máximo nivel de miedo
     //Inventario
-    public Inventory playerInventory;
-    public ItemPickup currentItemPickup;
+    
 
 
    

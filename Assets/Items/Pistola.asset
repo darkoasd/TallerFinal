@@ -9,11 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d7e2b86e6e56f5f4d898b6f6e48fa607, type: 3}
-  m_Name: Escopeta Maverick
+  m_Script: {fileID: 11500000, guid: e65bae8ca071e0e4aac681f10fc79e09, type: 3}
+  m_Name: Pistola
   m_EditorClassIdentifier: 
-  itemName: Escopeta Mav
-  itemType: 1
-  icon: {fileID: 21300000, guid: f5f972fb4b722c04db79d83610dd1dbe, type: 3}
-  description: 
-  damage: 5
+  itemName: Pistola
+  description: pistolita
+  icon: {fileID: 21300000, guid: 36eb14b6700a805478778501aa19656c, type: 3}
+  size: {x: 1, y: 3}

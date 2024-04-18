@@ -9,11 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 143ccb08c9202064badaa2d98cf3c3ac, type: 3}
-  m_Name: Bebida Energetica
+  m_Script: {fileID: 11500000, guid: e65bae8ca071e0e4aac681f10fc79e09, type: 3}
+  m_Name: Tela
   m_EditorClassIdentifier: 
-  itemName: 
-  itemType: 0
-  icon: {fileID: 21300000, guid: 13f17d7a31a73fd43ad8054a6e9b40e2, type: 3}
-  description: 
-  healthRestored: 5
+  itemName: Tela
+  description: Trapo
+  icon: {fileID: 21300000, guid: f5f972fb4b722c04db79d83610dd1dbe, type: 3}
+  size: {x: 2, y: 2}

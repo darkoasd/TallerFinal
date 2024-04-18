@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &3435213325779099989
+--- !u!1 &2206795597191543711
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,50 +8,50 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 2773658907136571266}
-  - component: {fileID: 5925319774359387947}
-  - component: {fileID: 4449865336288869871}
-  - component: {fileID: 7987849804070682948}
-  - component: {fileID: -5645419338742432434}
+  - component: {fileID: 5193817755044408154}
+  - component: {fileID: 8345334109736184654}
+  - component: {fileID: 3393022347293725274}
+  - component: {fileID: 8820650661818824659}
+  - component: {fileID: 1581530503728991291}
   m_Layer: 0
-  m_Name: Trapo
+  m_Name: Cube
   m_TagString: Item
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &2773658907136571266
+--- !u!4 &5193817755044408154
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3435213325779099989}
+  m_GameObject: {fileID: 2206795597191543711}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 111.853, y: 1.018, z: 31.441}
-  m_LocalScale: {x: 0.19593538, y: 0.19593538, z: 0.19593538}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 105.45, y: 1.83, z: -6.3}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!33 &5925319774359387947
+--- !u!33 &8345334109736184654
 MeshFilter:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3435213325779099989}
+  m_GameObject: {fileID: 2206795597191543711}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
---- !u!23 &4449865336288869871
+--- !u!23 &3393022347293725274
 MeshRenderer:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3435213325779099989}
+  m_GameObject: {fileID: 2206795597191543711}
   m_Enabled: 1
-  m_CastShadows: 1
+  m_CastShadows: 0
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1
   m_StaticShadowCaster: 0
@@ -63,7 +63,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 540ada7aa94cc8941bb937d8f474f990, type: 2}
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -85,13 +85,13 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!65 &7987849804070682948
+--- !u!65 &8820650661818824659
 BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3435213325779099989}
+  m_GameObject: {fileID: 2206795597191543711}
   m_Material: {fileID: 0}
   m_IncludeLayers:
     serializedVersion: 2
@@ -100,25 +100,22 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &-5645419338742432434
+--- !u!114 &1581530503728991291
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3435213325779099989}
+  m_GameObject: {fileID: 2206795597191543711}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d00a42ac3d16f6145aba70ae11906ba6, type: 3}
+  m_Script: {fileID: 11500000, guid: 91191d18c8970ea4a926763643e8b864, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  itemName: Trapo
-  icon: {fileID: 21300000, guid: 13f17d7a31a73fd43ad8054a6e9b40e2, type: 3}
-  width: 2
-  height: 6
+  item: {fileID: 11400000, guid: 39f63723967d365428a054b22f50f503, type: 2}

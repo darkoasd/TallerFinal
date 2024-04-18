@@ -4,48 +4,47 @@ using UnityEngine;
 
 public class ItemPickup : MonoBehaviour
 {
-
-    public Item item; // Asigna esto en el inspector de Unity, asegurándote de que se trata de un objeto de tipo Item.
-
-    private bool isPlayerNearby = false;
-    private PlayerController playerController;
-
-    private void Update()
-    {
-        if (isPlayerNearby && Input.GetKeyDown(KeyCode.E))
-        {
-            Pickup();
-        }
-    }
+    public Item item;
+    private bool isPlayerNear = false;
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.gameObject.CompareTag("Player"))
         {
-            isPlayerNearby = true;
-            playerController = other.GetComponent<PlayerController>();
-            playerController.currentItemPickup = this;  // Opcional, depende de tu lógica
+            isPlayerNear = true;
+            Debug.Log("Player is near the item.");
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Player"))
+        if (other.gameObject.CompareTag("Player"))
         {
-            isPlayerNearby = false;
-            playerController.currentItemPickup = null;  // Opcional, depende de tu lógica
+            isPlayerNear = false;
+            Debug.Log("Player is no longer near the item.");
         }
     }
 
-    public void Pickup()
+    private void Update()
     {
-        if (item != null && Inventory.instance.AddItem(item))  // Asumiendo que AddItem ahora devuelve true si fue exitoso
+        if (isPlayerNear && Input.GetKeyDown(KeyCode.E))
         {
-            Destroy(gameObject);  // Destruye el objeto después de recogerlo
+            Debug.Log("Trying to pick up the item.");
+            PickupItem();
+        }
+    }
+
+    private void PickupItem()
+    {
+        Inventario inventory = FindObjectOfType<Inventario>();
+        if (inventory != null)
+        {
+            inventory.AddItem(item);
+            Debug.Log("Item added to inventory.");
         }
         else
         {
-            Debug.LogWarning("No space to pick up the item or item is null.");
+            Debug.Log("Inventory not found.");
         }
+        Destroy(gameObject);
     }
-
 }
