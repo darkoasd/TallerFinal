@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using Cinemachine;
-
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 public class PlayerController : MonoBehaviour
 {
     public Camera cinemachineCamera;
+    public Volume damageVolume;
     public float speed = 5.0f;
     public float mouseSensitivity = 2.0f;
     public float jumpForce = 5.0f;
@@ -17,7 +19,7 @@ public class PlayerController : MonoBehaviour
     public AudioClip sonidoSalto;
     public Healthbar healthBar;
 
-
+    public bool isInventoryOpen = false;
     private Rigidbody rb;
     private float pitch = 0.0f;
 
@@ -60,10 +62,11 @@ public class PlayerController : MonoBehaviour
     public void RecibirDaño(float cantidad)
     {
         currentHealth -= cantidad;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         healthBar.SetHealth(currentHealth);
+        UpdateDamageEffect();
         if (currentHealth <= 0)
         {
-            // Manejar la muerte del jugador
             Morir();
         }
     }
@@ -75,23 +78,44 @@ public class PlayerController : MonoBehaviour
     }
     public void Morir()
     {
-        // Lógica de muerte del jugador aquí...
-
+        print("Muerto"); // Mensaje en consola
+        GameManager.instance.GameOver(); // Notifica al GameManager que el juego ha terminado
+        canMove = false; // Desactiva el movimiento del jugador
 
         print("Muerto");
     }
 
     void Update()
     {
-        if (Cursor.lockState != CursorLockMode.Locked)
+        if (canMove)  // Agrega esta condición para asegurarte de que no se ajuste el cursor si el jugador no puede moverse
         {
-            Cursor.lockState = CursorLockMode.Locked;
+            if (!isInventoryOpen)  // Solo bloquear el cursor si el inventario no está abierto
+            {
+                if (Cursor.lockState != CursorLockMode.Locked)
+                {
+                    Cursor.lockState = CursorLockMode.Locked;
+                }
+
+                HandleCameraRotation();
+                MovePlayer();
+            }
+
+            ApplyCameraTremble(nivelDeMiedo);
+            UpdateFearLevel();
+            HandleJumping();
+            UpdateAimingStatus();
         }
 
-        ApplyCameraTremble(nivelDeMiedo);
-       
-        UpdateFearLevel();
-
+        // Continúa manejo de la rotación de la cámara fuera del bloque `canMove` para asegurar que la cámara pueda ser ajustada aún después de morir
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        xRotation -= mouseY;
+        xRotation = Mathf.Clamp(xRotation, minPitch, maxPitch);
+        yRotation += mouseX;
+        transform.rotation = Quaternion.Euler(xRotation, yRotation, 0f);
+    }
+    void HandleCameraRotation()
+    {
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
@@ -99,24 +123,8 @@ public class PlayerController : MonoBehaviour
         xRotation = Mathf.Clamp(xRotation, minPitch, maxPitch);
         yRotation += mouseX;
 
-        // Aplica la rotación usando Quaternion directamente
-        transform.rotation = Quaternion.Euler(xRotation, yRotation, 0f);
-
-        UpdateAimingStatus();
-
-        if (canMove)
-        {
-            MovePlayer();
-        }
-
-        HandleJumping();
-
-        if (armaScript != null)
-        {
-            armaScript.ActualizarEstadoDeApuntado(isAiming, nivelDeMiedo, maxMiedo);
-        }
+        transform.localRotation = Quaternion.Euler(xRotation, yRotation, 0f);
     }
-   
     void UpdateFearLevel()
     {
         bool enemySeen = false;
@@ -261,14 +269,20 @@ public class PlayerController : MonoBehaviour
             canJump = true;
         }
     }
-
-    public void TakeDamage(float damage)
+    private void UpdateDamageEffect()
     {
-        currentHealth -= damage;
-        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
-        healthBar.SetHealth(currentHealth);
-    }
 
+        float healthPercent = currentHealth / maxHealth;
+        Debug.Log("Updating damage effect. Health percent: " + healthPercent);  // Agrega esto para depurar
+
+        if (damageVolume.profile.TryGet(out Bloom bloom))
+        {
+            bloom.intensity.value = Mathf.Lerp(0.0f, 2.0f, 1 - healthPercent);
+        }
+       
+     
+    }
+      
     public void Heal(int amount)
     {
         currentHealth += amount;
@@ -294,6 +308,6 @@ public class PlayerController : MonoBehaviour
         decrementoMiedo *= multiplier;
     }
    
-   
+ 
 
 }

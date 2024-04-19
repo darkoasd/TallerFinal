@@ -15,4 +15,4 @@ MonoBehaviour:
   itemName: Pistola
   description: pistolita
   icon: {fileID: 21300000, guid: 36eb14b6700a805478778501aa19656c, type: 3}
-  size: {x: 1, y: 3}
+  size: {x: 2, y: 2}

@@ -16,7 +16,7 @@ public class Inventario : MonoBehaviour
         InitializeSlots();
     }
 
-   
+
     public void InitializeSlots()
     {
         // Asigna un número fijo de slots, por ejemplo 24 slots (6x4 grid)
@@ -36,40 +36,15 @@ public class Inventario : MonoBehaviour
         // Intentar encontrar un lugar en el inventario donde el item pueda ser colocado
         for (int i = 0; i < slots.Count; i++)
         {
-            if (CheckIfFits(item, i))
+            if (!slotIsOccupied[i] && CheckIfFits(item, i)) // Asegúrate de verificar si el slot está ocupado
             {
                 PlaceItemInSlots(item, i);
-                MarkSlotsAsOccupied(item, i);
                 return;
             }
         }
         Debug.Log("No hay suficiente espacio en el inventario para este item");
     }
-
-    private bool CheckIfFits(Item item, int startIndex)
-    {
-        int numColumns = 6; // Asume que el inventario es de 6 slots de ancho
-        int row = startIndex / numColumns;
-        int column = startIndex % numColumns;
-
-        if (column + item.size.x > numColumns || row + item.size.y > slots.Count / numColumns)
-            return false;
-
-        for (int y = 0; y < item.size.y; y++)
-        {
-            for (int x = 0; x < item.size.x; x++)
-            {
-                int slotIndex = startIndex + x + y * numColumns;
-                if (slotIndex >= slots.Count || slotIsOccupied[slotIndex])
-                {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private void MarkSlotsAsOccupied(Item item, int startIndex)
+    public void ClearSlots(Item item, int startIndex)
     {
         int numColumns = 6; // Configuración de columnas en el GridLayoutGroup
         for (int y = 0; y < item.size.y; y++)
@@ -77,7 +52,47 @@ public class Inventario : MonoBehaviour
             for (int x = 0; x < item.size.x; x++)
             {
                 int slotIndex = startIndex + x + y * numColumns;
-                if (slotIndex < slotIsOccupied.Length)
+                if (slotIndex < slots.Count)
+                {
+                    slotIsOccupied[slotIndex] = false;
+                }
+            }
+        }
+    }
+
+    private bool CheckIfFits(Item item, int startIndex)
+    {
+        int numColumns = 6; // Asume que el inventario es de 6 slots de ancho
+        int numRows = slots.Count / numColumns; // Asume una cantidad fija de filas basado en el total de slots
+        int row = startIndex / numColumns;
+        int column = startIndex % numColumns;
+
+        // Verifica si el item se sale de los límites del inventario
+        if (column + item.size.x > numColumns || row + item.size.y > numRows)
+            return false;
+
+        // Verifica si algún slot necesario está ya ocupado
+        for (int y = 0; y < item.size.y; y++)
+        {
+            for (int x = 0; x < item.size.x; x++)
+            {
+                int slotIndex = startIndex + x + y * numColumns;
+                if (slotIndex >= slots.Count || slotIsOccupied[slotIndex])
+                    return false;
+            }
+        }
+        return true;
+    }
+
+    public void MarkSlotsAsOccupied(Item item, int startIndex)
+    {
+        int numColumns = 6; // Configuración de columnas en el GridLayoutGroup
+        for (int y = 0; y < item.size.y; y++)
+        {
+            for (int x = 0; x < item.size.x; x++)
+            {
+                int slotIndex = startIndex + x + y * numColumns;
+                if (slotIndex < slots.Count)
                 {
                     slotIsOccupied[slotIndex] = true;
                 }
@@ -93,11 +108,24 @@ public class Inventario : MonoBehaviour
         {
             int numColumns = 6; // Configuración de columnas en el GridLayoutGroup
             GameObject initialSlot = slots[startIndex];
-            GameObject inventoryParent = inventoryPanel.transform.parent.gameObject;
+            GameObject inventoryParent = inventoryPanel.transform.parent.gameObject;  // Parent deseado para los items
 
+            // Instancia el item prefab en el inventario
             GameObject itemUI = Instantiate(itemPrefab, inventoryParent.transform);
-            RectTransform itemRect = itemUI.GetComponent<RectTransform>();
+            DraggableItem draggableComponent = itemUI.GetComponent<DraggableItem>();
 
+            // Configura el item usando el script DraggableItem, pasando también el parent original
+            if (draggableComponent != null)
+            {
+                draggableComponent.SetupItem(item, startIndex, inventoryParent.transform);  // Pasando el Transform del parent deseado
+            }
+            else
+            {
+                Debug.LogError("DraggableItem component not found on item prefab!");
+                return;  // Detiene la ejecución si no se encuentra el componente
+            }
+
+            RectTransform itemRect = itemUI.GetComponent<RectTransform>();
             GridLayoutGroup gridLayout = inventoryPanel.GetComponent<GridLayoutGroup>();
             Vector2 cellSize = gridLayout.cellSize;
             Vector2 spacing = gridLayout.spacing;
@@ -112,29 +140,49 @@ public class Inventario : MonoBehaviour
             itemRect.anchoredPosition = new Vector2(posX, posY);
             itemRect.sizeDelta = new Vector2(cellSize.x * item.size.x + spacing.x * (item.size.x - 1), cellSize.y * item.size.y + spacing.y * (item.size.y - 1));
 
-            Image itemImage = itemUI.GetComponent<Image>();
-            if (itemImage != null)
-            {
-                itemImage.sprite = item.icon;
-                itemImage.color = new Color(1f, 1f, 1f, 1f);
-            }
-            else
-            {
-                Debug.LogError("Image component not found on item prefab!");
-            }
-            // Asegúrate de que el TextMeshPro componente se actualiza correctamente
-            TMPro.TextMeshProUGUI textMesh = itemUI.GetComponentInChildren<TMPro.TextMeshProUGUI>();
-            if (textMesh != null)
-            {
-                textMesh.text = item.itemName;
-            }
-            else
-            {
-                Debug.LogError("TextMeshPro component not found on item prefab!");
-            }
-
             // Marcar slots como ocupados
             MarkSlotsAsOccupied(item, startIndex);
         }
+    }
+    public bool TryGetPositionForItem(Item item, RectTransform itemRect, Vector2 position, out Vector2 newPos, out int newSlotIndex)
+    {
+        newPos = new Vector2();
+        newSlotIndex = -1;
+
+        GridLayoutGroup gridLayout = inventoryPanel.GetComponent<GridLayoutGroup>();
+        Vector2 cellSize = gridLayout.cellSize;
+        Vector2 spacing = gridLayout.spacing;
+        int numColumns = 6;
+
+        for (int i = 0; i < slots.Count; i++)
+        {
+            RectTransform slotRect = slots[i].GetComponent<RectTransform>();
+            if (RectTransformUtility.RectangleContainsScreenPoint(slotRect, position, null))
+            {
+                bool fits = true;
+                for (int y = 0; y < item.size.y; y++)
+                {
+                    for (int x = 0; x < item.size.x; x++)
+                    {
+                        int slotIndex = i + x + y * numColumns;
+                        if (slotIndex >= slots.Count || slotIsOccupied[slotIndex])
+                        {
+                            fits = false;
+                            break;
+                        }
+                    }
+                    if (!fits) break;
+                }
+
+                if (fits)
+                {
+                    newPos.x = slotRect.anchoredPosition.x + ((cellSize.x + spacing.x) * (item.size.x - 1)) / 2;
+                    newPos.y = slotRect.anchoredPosition.y - ((cellSize.y + spacing.y) * (item.size.y - 1)) / 2;
+                    newSlotIndex = i;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
