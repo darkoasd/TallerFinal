@@ -25,6 +25,15 @@ public class EnemyPatrullar : Enemy
             ElegirPuntoDePatrulla();
         }
     }
+    protected override void Update()
+    {
+        base.Update();
+
+        if (agente.remainingDistance < agente.stoppingDistance)
+        {
+            Patrullar();  // Continúa patrullando si ha llegado al destino y no ve al jugador
+        }
+    }
 
     void ElegirPuntoDePatrulla()
     {

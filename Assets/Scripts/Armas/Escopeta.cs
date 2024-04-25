@@ -46,12 +46,12 @@ public class Escopeta : Arma
                     Enemy saludEnemigo = hit.collider.GetComponent<Enemy>();
                     if (saludEnemigo != null)
                     {
-                        saludEnemigo.RecibirDaño(daño);
+                        saludEnemigo.RecibirDaño(daño, spread);
                     }
                     ObjetoDestruible destructibleTarget = hit.collider.GetComponent<ObjetoDestruible>();
                     if (destructibleTarget != null)
                     {
-                        destructibleTarget.DestroyAndReplace();
+                        destructibleTarget.ReceiveDamage(daño);
                     }
                 }
             }

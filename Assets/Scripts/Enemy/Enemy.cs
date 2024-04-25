@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
+public enum EstadoEnemigo { Patrullando, Persiguiendo, Atacando, Investigando }
 public abstract class Enemy : MonoBehaviour
 {
     public float saludMaxima = 100f;
@@ -187,12 +188,23 @@ public abstract class Enemy : MonoBehaviour
 
     protected abstract void Patrullar(); // Método abstracto para ser implementado por clases derivadas
 
-    public void RecibirDaño(float cantidad)
+    public void RecibirDaño(float cantidad, Vector3 posicionDisparo)
     {
         saludActual -= cantidad;
         if (saludActual <= 0f)
         {
             Morir();
+        }
+        else
+        {
+            Investigar(posicionDisparo);
+        }
+    }
+    protected void Investigar(Vector3 origenDisparo)
+    {
+        if (Vector3.Distance(transform.position, origenDisparo) > 5f)  // Solo reacciona si el disparo vino de lejos
+        {
+            agente.SetDestination(origenDisparo);
         }
     }
 

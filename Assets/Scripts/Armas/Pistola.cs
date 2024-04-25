@@ -29,14 +29,14 @@ public class Pistola : Arma
                 Enemy saludEnemigo = hit.collider.GetComponent<Enemy>();
                 if (saludEnemigo != null)
                 {
-                    saludEnemigo.RecibirDaño(daño);
+                    saludEnemigo.RecibirDaño(daño, rayOrigin);
                 }
 
                 // Aplica daño a objetos destruibles
                 ObjetoDestruible destructibleTarget = hit.collider.GetComponent<ObjetoDestruible>();
                 if (destructibleTarget != null)
                 {
-                    destructibleTarget.DestroyAndReplace();
+                    destructibleTarget.ReceiveDamage(daño);
                 }
             }
         }
