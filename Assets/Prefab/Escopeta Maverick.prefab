@@ -41,22 +41,22 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 5cd5b074a2a8dfc43b2322e0eb75ca9b,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: 0.65634674
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5cd5b074a2a8dfc43b2322e0eb75ca9b,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0.6255008
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5cd5b074a2a8dfc43b2322e0eb75ca9b,
         type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0.41460365
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5cd5b074a2a8dfc43b2322e0eb75ca9b,
         type: 3}
       propertyPath: m_LocalRotation.z
-      value: -0.077855244
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5cd5b074a2a8dfc43b2322e0eb75ca9b,
         type: 3}
@@ -66,7 +66,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 5cd5b074a2a8dfc43b2322e0eb75ca9b,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
-      value: 180
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 5cd5b074a2a8dfc43b2322e0eb75ca9b,
         type: 3}
@@ -151,6 +151,7 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 8
+  textoMunicion: {fileID: 0}
 --- !u!95 &4192235776610445317
 Animator:
   serializedVersion: 5
