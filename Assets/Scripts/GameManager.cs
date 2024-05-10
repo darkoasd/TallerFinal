@@ -6,27 +6,72 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager instance; // Singleton instance
-    public GameObject inventoryUI;      // GameObject de tu inventario
+    public static GameManager instance;
+    public GameObject inventoryUI;
+    public GameObject inventoryArtifacts; // GameObject para el inventario de artefactos
     public GameObject gameOverScreen;
-    public GameObject pauseMenuUI;      // GameObject para el menú de pausa
-
+    public GameObject pauseMenuUI;
+    public GameObject inventoryButtons;
     void Awake()
     {
         if (instance != null)
         {
-            Debug.LogError("Más de una instancia de GameManager encontrada!");
+            Destroy(gameObject); // Destruye el nuevo objeto si ya existe una instancia
             return;
         }
         instance = this;
+        DontDestroyOnLoad(gameObject); 
     }
 
     void Start()
     {
-        // Opcionalmente ocultar el cursor al inicio si el inventario inicia desactivado
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
-        pauseMenuUI.SetActive(false); // Asegúrate de que el menú de pausa está desactivado al iniciar
+        pauseMenuUI.SetActive(false);
+       
+        inventoryArtifacts.SetActive(false);
+    }
+    public void OpenMainInventory()
+    {
+        Debug.Log("Opening Inventory");
+        inventoryUI.SetActive(true);
+        inventoryArtifacts.SetActive(false);
+        UpdateCursor(true);
+        UpdatePlayerControllerInventoryStatus(true);
+    }
+    public bool IsInventoryOpen()
+    {
+        return inventoryUI.activeSelf || inventoryArtifacts.activeSelf;
+    }
+
+    public void OpenArtifactInventory()
+    {
+        inventoryUI.SetActive(false);
+        inventoryArtifacts.SetActive(true);
+        UpdateCursor(true);
+        UpdatePlayerControllerInventoryStatus(true);
+    }
+
+    public void CloseInventories()
+    {
+        inventoryUI.SetActive(false);
+        inventoryArtifacts.SetActive(false);
+        UpdateCursor(false);
+        UpdatePlayerControllerInventoryStatus(false);
+    }
+    void UpdateCursor(bool isVisible)
+    {
+        Cursor.visible = isVisible;
+        Cursor.lockState = isVisible ? CursorLockMode.None : CursorLockMode.Locked;
+    }
+
+    void UpdatePlayerControllerInventoryStatus(bool isOpen)
+    {
+        PlayerController playerController = FindObjectOfType<PlayerController>();
+        if (playerController != null)
+        {
+            playerController.isInventoryOpen = isOpen;
+        }
     }
 
     void Update()
@@ -36,66 +81,32 @@ public class GameManager : MonoBehaviour
             ToggleInventory();
         }
 
-        if (Input.GetKeyDown(KeyCode.P)) // Tecla típica para pausar el juego
+        if (Input.GetKeyDown(KeyCode.Escape))
         {
             TogglePauseMenu();
         }
 
-        if (gameOverScreen.activeSelf) // Asegura que el cursor permanezca visible si Game Over está activo
-        {
-            ShowCursor();
-        }
     }
-    public void ResumeGame()
-    {
-        pauseMenuUI.SetActive(false);  // Oculta el menú de pausa
-        Time.timeScale = 1;            // Reanuda el tiempo del juego
-        Cursor.visible = false;        // Oculta el cursor
-        Cursor.lockState = CursorLockMode.Locked;  // Bloquea el cursor al centro de la pantalla
-    }
-    void TogglePauseMenu()
-    {
-        pauseMenuUI.SetActive(!pauseMenuUI.activeSelf); // Toggle la visibilidad del menú de pausa
-
-        if (pauseMenuUI.activeSelf)
-        {
-            Time.timeScale = 1 - Time.timeScale;
-            if(Time.timeScale == 0)
-            {
-                ShowCursor();
-            }
-            
-           
-        }
-        else
-        {
-            Time.timeScale = 1; // Reanuda el juego
-            HideCursor();
-        }
-    }
-
 
     public void ToggleInventory()
     {
-        bool isCurrentlyActive = inventoryUI.activeSelf;
-        inventoryUI.SetActive(!isCurrentlyActive);
+        bool anyInventoryActive = inventoryUI.activeSelf || inventoryArtifacts.activeSelf;
 
-        PlayerController playerController = FindObjectOfType<PlayerController>();
-        if (playerController != null)
+        if (anyInventoryActive)
         {
-            playerController.isInventoryOpen = !isCurrentlyActive;  // Actualizar la variable en PlayerController
-        }
-
-        // Configurar el cursor basado en si el inventario está abierto o no
-        if (isCurrentlyActive)
-        {
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
+            inventoryUI.SetActive(false);
+            inventoryArtifacts.SetActive(false);
+            inventoryButtons.SetActive(false);
+            UpdateCursor(false);
+            UpdatePlayerControllerInventoryStatus(false);
         }
         else
         {
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
+            inventoryUI.SetActive(true);
+            inventoryArtifacts.SetActive(false);
+            inventoryButtons.SetActive(true);
+            UpdateCursor(true);
+            UpdatePlayerControllerInventoryStatus(true);
         }
     }
 
@@ -104,28 +115,70 @@ public class GameManager : MonoBehaviour
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }
+
     void HideCursor()
     {
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
 
+    public void ResumeGame()
+    {
+        pauseMenuUI.SetActive(false);
+        Time.timeScale = 1;
+        UpdateCursor(false);
+    }
+
+    void TogglePauseMenu()
+    {
+        bool isActive = pauseMenuUI.activeSelf;
+        pauseMenuUI.SetActive(!isActive);
+        Time.timeScale = isActive ? 1 : 0;
+
+        UpdateCursor(!isActive);
+    }
+
+    public void GameOver()
+    {
+        gameOverScreen.SetActive(true);
+        UpdateCursor(true);
+    }
+
     public void CargarMundo()
     {
         SceneManager.LoadScene("Nivel1");
+        StartCoroutine(ResetPlayerStateAfterLoad());
+       
+
+
+    }
+    IEnumerator ResetPlayerStateAfterLoad()
+    {
+        // Espera un frame después de cargar la escena para que todos los scripts se hayan inicializado
+        yield return null;
+
+        PlayerController playerController = FindObjectOfType<PlayerController>();
+        if (playerController != null)
+        {
+            gameOverScreen.SetActive(false);
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+            playerController.Reiniciar(); // Reinicia el estado del jugador
+        }
     }
 
     public void SalirJuego()
     {
         Application.Quit();
     }
-    public void GameOver()
-    {
-        gameOverScreen.SetActive(true); // Muestra la pantalla de Game Over
-    }
+
     public void CargarMenu()
     {
         SceneManager.LoadScene("MainMenu");
+        Time.timeScale = 1f;
+        gameOverScreen.SetActive(false);
+        pauseMenuUI.SetActive(false);
+        inventoryUI.SetActive(false);
+        inventoryArtifacts.SetActive(false);
     }
 }
-

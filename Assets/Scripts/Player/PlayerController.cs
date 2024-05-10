@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using Cinemachine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 public class PlayerController : MonoBehaviour
 {
     public Camera cinemachineCamera;
@@ -23,7 +24,7 @@ public class PlayerController : MonoBehaviour
     private Rigidbody rb;
     private float pitch = 0.0f;
 
-    public float runSpeed = 10.0f; 
+    public float runSpeed = 10.0f;
     private bool canJump = true;
 
     public Arma armaScript;
@@ -41,11 +42,14 @@ public class PlayerController : MonoBehaviour
     public float incrementoMiedo = 0.1f; // Cantidad de miedo que aumenta por frame al ver a un enemigo
     public float decrementoMiedo = 0.01f; // Cantidad de miedo que disminuye por frame cuando no ve a enemigos
     public float maxMiedo = 1f; // Máximo nivel de miedo
-    //Inventario
-    
+                                //Inventario
 
+    //Puerta
 
-   
+    private bool inTriggerZone = false;
+    private DoorController currentDoor;
+
+    public Vector3 posicionSpawnPlayer;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
@@ -58,13 +62,38 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = false; // Oculta el cursor
         Cursor.lockState = CursorLockMode.Locked;
 
+        posicionSpawnPlayer = transform.position;
+
+    }
+    void Awake()
+    {
+        SceneManager.sceneLoaded += OnSceneLoaded;
+        DontDestroyOnLoad(gameObject);
+    }
+
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        if (scene.name == "MainMenu")  // Cambia "MainMenu" por el nombre real de tu escena de menú
+        {
+            gameObject.SetActive(false);  // Desactiva al jugador en el menú
+        }
+        else
+        {
+            gameObject.SetActive(true);  // Reactiva al jugador en escenas de juego
+        }
+    }
+
+    void OnDestroy()
+    {
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
     public void RecibirDaño(float cantidad)
     {
         currentHealth -= cantidad;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         healthBar.SetHealth(currentHealth);
-        UpdateDamageEffect();
+       
         if (currentHealth <= 0)
         {
             Morir();
@@ -72,9 +101,12 @@ public class PlayerController : MonoBehaviour
     }
     public void Reiniciar()
     {
-        canMove = true; // Permite el movimiento
-        currentHealth = maxHealth; // Restablece la salud
-                                   // Restablecer cualquier otro estado necesario aquí
+        transform.position = posicionSpawnPlayer; // Resetea la posición del jugador a la inicial
+        canMove = true;
+        currentHealth = maxHealth;
+        isInventoryOpen = false;
+        healthBar.SetMaxHealth(maxHealth);
+        healthBar.SetHealth(maxHealth);
     }
     public void Morir()
     {
@@ -87,43 +119,37 @@ public class PlayerController : MonoBehaviour
 
     void Update()
     {
-        if (canMove)  // Agrega esta condición para asegurarte de que no se ajuste el cursor si el jugador no puede moverse
+        if (canMove && !isInventoryOpen)  // Asegúrate de que todas las acciones del jugador están dentro de esta verificación
         {
-            if (!isInventoryOpen)  // Solo bloquear el cursor si el inventario no está abierto
-            {
-                if (Cursor.lockState != CursorLockMode.Locked)
-                {
-                    Cursor.lockState = CursorLockMode.Locked;
-                }
-
-                HandleCameraRotation();
-                MovePlayer();
-            }
-
+            HandleCameraRotation();
+            MovePlayer();
             ApplyCameraTremble(nivelDeMiedo);
             UpdateFearLevel();
             HandleJumping();
             UpdateAimingStatus();
+
+            if (inTriggerZone && Input.GetKeyDown(KeyCode.E) && currentDoor != null)
+            {
+                currentDoor.ToggleDoor(GetComponent<KeyInventory>());
+            }
         }
 
         // Continúa manejo de la rotación de la cámara fuera del bloque `canMove` para asegurar que la cámara pueda ser ajustada aún después de morir
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, minPitch, maxPitch);
-        yRotation += mouseX;
-        transform.rotation = Quaternion.Euler(xRotation, yRotation, 0f);
+        
     }
     void HandleCameraRotation()
     {
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
+        if (!isInventoryOpen)  // Solo permitir la rotación de la cámara si el inventario no está abierto
+        {
+            float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
+            float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, minPitch, maxPitch);
-        yRotation += mouseX;
+            xRotation -= mouseY;
+            xRotation = Mathf.Clamp(xRotation, minPitch, maxPitch);
+            yRotation += mouseX;
 
-        transform.localRotation = Quaternion.Euler(xRotation, yRotation, 0f);
+            transform.localRotation = Quaternion.Euler(xRotation, yRotation, 0f);
+        }
     }
     void UpdateFearLevel()
     {
@@ -172,22 +198,19 @@ public class PlayerController : MonoBehaviour
 
         if (fearLevel > fearThreshold)
         {
-            // Calcula la cantidad de temblor basada en cuánto el nivel de miedo excede el umbral
-            float trembleIntensity = (fearLevel - fearThreshold) / (maxMiedo - fearThreshold); // Esto normaliza el temblor de 0 a 1
-            float trembleAmount = trembleIntensity * 0.3f; // Controla la intensidad del temblor para que sea sutil
+            float trembleIntensity = (fearLevel - fearThreshold) / (maxMiedo - fearThreshold);
+            float trembleAmount = trembleIntensity * 0.3f;
 
-            // Calcula variaciones aleatorias para el pitch y el yaw de la cámara
             float tremblePitch = Random.Range(-trembleAmount, trembleAmount);
             float trembleYaw = Random.Range(-trembleAmount, trembleAmount);
 
-            // Aplica el temblor a la rotación actual de la cámara
             Quaternion originalRotation = cinemachineCamera.transform.localRotation;
             cinemachineCamera.transform.localRotation = Quaternion.Euler(originalRotation.eulerAngles.x + tremblePitch, originalRotation.eulerAngles.y + trembleYaw, originalRotation.eulerAngles.z);
         }
         else
         {
-            // Restablece la rotación de la cámara suavemente si el miedo está por debajo del umbral
-            Quaternion targetRotation = Quaternion.Euler(pitch, cinemachineCamera.transform.localEulerAngles.y, 0);
+            // Restablece la rotación de la cámara suavemente asegurando que la rotación Y vuelve a cero
+            Quaternion targetRotation = Quaternion.Euler(pitch, 0, 0); // Asegúrate de que el segundo parámetro es cero para el eje Y
             cinemachineCamera.transform.localRotation = Quaternion.Lerp(cinemachineCamera.transform.localRotation, targetRotation, Time.deltaTime * 5);
         }
     }
@@ -269,27 +292,15 @@ public class PlayerController : MonoBehaviour
             canJump = true;
         }
     }
-    private void UpdateDamageEffect()
-    {
+    
 
-        float healthPercent = currentHealth / maxHealth;
-        Debug.Log("Updating damage effect. Health percent: " + healthPercent);  // Agrega esto para depurar
-
-        if (damageVolume.profile.TryGet(out Bloom bloom))
-        {
-            bloom.intensity.value = Mathf.Lerp(0.0f, 2.0f, 1 - healthPercent);
-        }
-       
-     
-    }
-      
     public void Heal(int amount)
     {
         currentHealth += amount;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         healthBar.SetHealth(currentHealth);
     }
- 
+
 
     void OnCollisionExit(Collision collision)
     {
@@ -307,7 +318,26 @@ public class PlayerController : MonoBehaviour
     {
         decrementoMiedo *= multiplier;
     }
-   
- 
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("DoorTrigger")) // Asegúrate de que el tag "DoorTrigger" esté configurado en el trigger de la puerta
+        {
+            inTriggerZone = true;
+            currentDoor = other.GetComponentInParent<DoorController>();
+
+        }
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("DoorTrigger"))
+        {
+            inTriggerZone = false;
+            currentDoor = null;
+
+
+        }
+    }
 
 }

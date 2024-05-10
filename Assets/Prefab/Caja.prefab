@@ -303,7 +303,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 707baef54aaed8d4fac19e37544819b2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -394,5 +394,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f0324d8d820ded448131e6beb99dc29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  destroyedVersionPrefab: {fileID: 3435213325779099989, guid: 21ed0fe4c9b94a34988fcd3e89d6c59b,
-    type: 3}
+  health: 10
+  itemPrefabs:
+  - {fileID: 6297949072603872814, guid: f4dc55e74a3ff624cbd4084f2635d4e5, type: 3}
+  - {fileID: 2206795597191543711, guid: b6d882daa85cd6c4db163b1ce5bcace1, type: 3}
+  - {fileID: 3866826704669790462, guid: deef025cd38458149885251946e278ef, type: 3}
+  - {fileID: 6323948426962973085, guid: 16ffe0d298abdad47910a73b9bc1dddb, type: 3}
+  - {fileID: 3663953172021340694, guid: 51c07543e2b3b4a46bf215e78bd5a158, type: 3}
+  dropProbability: 0.8

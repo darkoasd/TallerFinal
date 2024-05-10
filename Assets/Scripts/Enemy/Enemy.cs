@@ -121,7 +121,7 @@ public abstract class Enemy : MonoBehaviour
         }
     }
 
-    protected void DetectarJugadorYPerseguir()
+    protected virtual void DetectarJugadorYPerseguir()
     {
         if (objetivo == null || estaAtacando) return;
 

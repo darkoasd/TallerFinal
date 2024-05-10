@@ -5,6 +5,7 @@ using UnityEngine;
 
 public abstract class Arma : MonoBehaviour
 {
+    //Stats
     public float daño = 10f; // Daño causado por el arma
     public float rango = 100f; // Rango máximo del arma
     public float tiempoEntreDisparos = 0.5f; // Tiempo mínimo entre disparos
@@ -12,11 +13,19 @@ public abstract class Arma : MonoBehaviour
     protected float tiempoUltimoDisparo; // Control del tiempo desde el último disparo
     public float tiempoApuntar = 0.2f; // Tiempo para apuntar con precisión
     public bool apuntando = false; // Estado de apuntado
-    public float precisionApuntado; // Mejora la precisión mientras se apunta
-    public float precisionDesdeCadera; // Precisión base sin apuntar
+
+    //Aim
+    public float precisionApuntado = 1f;  // Precisión perfecta cuando se apunta
+    public float precisionDesdeCadera = 5f;  // Menor precisión al disparar desde la cadera
     public float precisionActual;
+    public float recoil = 0.1f;  // El recoil incrementa la dispersión tras cada disparo
+    public float recoilRecoveryRate = 0.1f;  // Tasa de recuperación del recoil
+
+
 
     public float umbralDeMiedo = 0.5f; // Umbral de miedo configurable desde el Editor
+
+    public bool disparando = false; // Estado de disparo
     [Range(0, 1)] public float factorReduccionMiedo = 0.2f; //
     // Municion
     public int municionEnCargador;
@@ -40,8 +49,25 @@ public abstract class Arma : MonoBehaviour
         tiempoUltimoDisparo = -tiempoEntreDisparos;
         precisionActual = precisionDesdeCadera;
         municionEnCargador = capacidadCargador;
-        municionDeReserva = 90; // Asumiendo que empiezas con 90 balas de reserva.
+        municionDeReserva = 21; // Asumiendo que empiezas con 90 balas de reserva.
     }
+   
+    protected void AplicarRecoil()
+    {
+        precisionActual += recoil;
+    }
+    protected Vector3 CalcularDireccionDisparo()
+    {
+        Vector3 disparoDir = cameraTransform.forward;
+        if (!apuntando)
+        {
+            float dispersionHorizontal = Random.Range(-precisionActual, precisionActual);
+            float dispersionVertical = Random.Range(-precisionActual, precisionActual);
+            disparoDir = Quaternion.Euler(dispersionVertical, dispersionHorizontal, 0) * disparoDir;
+        }
+        return disparoDir;
+    }
+
     public void AjustarPrecision(float nivelDeMiedo)
     {
 
@@ -92,18 +118,10 @@ public abstract class Arma : MonoBehaviour
     {
         apuntando = true;
         precisionActual = precisionApuntado;
-
-        // Oculta el crosshair cuando el jugador está apuntando
         if (crosshair != null)
-        {
             crosshair.SetActive(false);
-        }
-
-        // Cambia la animación a apuntando
         if (animator != null)
-        {
             animator.SetBool("Apuntando", true);
-        }
     }
     public void ActualizarEstadoDeApuntado(bool estaApuntando, float nivelDeMiedo, float maxMiedo)
     {
@@ -114,14 +132,10 @@ public abstract class Arma : MonoBehaviour
     {
         apuntando = false;
         precisionActual = precisionDesdeCadera;
-
-        // Muestra el crosshair cuando el jugador no está apuntando
         if (crosshair != null)
-        {
             crosshair.SetActive(true);
-        }
-        // Cambia la animación a idle
-        if (animator != null) animator.SetBool("Apuntando", false);
+        if (animator != null)
+            animator.SetBool("Apuntando", false);
     }
 
     // Corrutina para simular demora al apuntar
@@ -137,9 +151,6 @@ public abstract class Arma : MonoBehaviour
     // Este método actualizará el estado del arma cada frame
     protected virtual void Update()
     {
-      
-
-        // Comprueba si el jugador está presionando o soltando el botón derecho del ratón
         if (Input.GetButtonDown("Fire2"))
         {
             ComenzarApuntar();
@@ -148,6 +159,12 @@ public abstract class Arma : MonoBehaviour
         {
             DejarDeApuntar();
         }
+
+        // Recuperación del recoil
+        if (precisionActual > precisionDesdeCadera)
+        {
+            precisionActual -= recoilRecoveryRate * Time.deltaTime;
+            precisionActual = Mathf.Max(precisionActual, apuntando ? precisionApuntado : precisionDesdeCadera);
+        }
     }
-   
 }

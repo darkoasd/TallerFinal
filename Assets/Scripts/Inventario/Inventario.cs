@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-
+using TMPro;
 public class Inventario : MonoBehaviour
 {
     public GameObject inventoryPanel;  // Panel de UI que contiene el GridLayoutGroup
@@ -11,16 +11,172 @@ public class Inventario : MonoBehaviour
     private List<GameObject> slots = new List<GameObject>(); // Lista de slots en el inventario
     private bool[] slotIsOccupied; // Array para mantener el estado ocupado de cada slot
 
+    //UI
+    public TextMeshProUGUI textMeshProNombre;
+    public TextMeshProUGUI textMeshProDescripcion;
+    public GameObject playerHands;
+    public Animator handsAnimator;
+    private Item selectedItem;  // Ítem actualmente seleccionado
     void Start()
     {
         InitializeSlots();
+        
+    }
+    void Awake()
+    {
+        if (inventoryPanel != null)
+        {
+           
+         
+        }
+        else
+        {
+            Debug.LogError("Inventory panel is not assigned!");
+        }
+    }
+    public void EquipItem(Item item)
+    {
+        if (handsAnimator == null)
+        {
+            Debug.LogError("Animator component not assigned or found!");
+            return;
+        }
+
+        // Primero desactivar todos los parámetros para evitar superposiciones
+        handsAnimator.SetBool("ConPistola", false);
+        handsAnimator.SetBool("ConEscopeta", false);
+        handsAnimator.SetBool("Disparando", false);
+        handsAnimator.SetBool("DisparandoEscopeta", false);
+        if (item == null)
+        {
+            // Desactiva cualquier arma
+            foreach (Transform child in playerHands.transform)
+            {
+                child.gameObject.SetActive(false);
+            }
+            return;
+        }
+
+        // Desactiva todos los ítems/objetos armas activos
+        foreach (Transform child in playerHands.transform)
+        {
+            child.gameObject.SetActive(false);
+        }
+
+        // Activa la arma específica basada en el tipo de ítem
+        Transform weaponTransform = playerHands.transform.Find(item.itemName);
+        if (weaponTransform != null)
+        {
+            weaponTransform.gameObject.SetActive(true);
+            if (item.itemType == ItemType.Weapon)
+            {
+                switch (item.itemName)
+                {
+                    case "Pistola":
+                        handsAnimator.SetBool("ConPistola", true);
+                        break;
+                    case "Escopeta":
+                        handsAnimator.SetBool("ConEscopeta", true);
+                        break;
+                }
+            }
+        }
+        else
+        {
+            Debug.LogError("Assigned weapon not found in playerHands children.");
+        }
+    }
+    private void RemoveItemFromInventory(Item item)
+    {
+
+        // Encuentra y destruye el objeto UI del ítem en el inventario
+        for (int i = 0; i < slots.Count; i++)
+        {
+            DraggableItem draggableItem = slots[i].GetComponentInChildren<DraggableItem>();
+            if (draggableItem != null && draggableItem.item == item)
+            {
+                slotIsOccupied[i] = false;  // Marca el slot como no ocupado
+                Destroy(draggableItem.gameObject);  // Destruye el objeto del ítem
+                break;
+            }
+        }
+    }
+    public void ClearSlots(Item item, int startIndex)
+    {
+        int numColumns = 10; // Configuración de columnas en el GridLayoutGroup
+        for (int y = 0; y < item.size.y; y++)
+        {
+            for (int x = 0; x < item.size.x; x++)
+            {
+                int slotIndex = startIndex + x + y * numColumns;
+                if (slotIndex < slots.Count)
+                {
+                    slotIsOccupied[slotIndex] = false;
+                }
+            }
+        }
+    }
+    public void UseSelectedItem()
+    {
+        if (selectedItem != null && selectedItem.itemType == ItemType.Consumable)
+        {
+            PlayerController player = FindObjectOfType<PlayerController>();
+            if (player != null)
+            {
+                player.Heal(selectedItem.healingAmount);  // Curar al jugador con la cantidad especificada
+                RemoveItemFromInventory(selectedItem);   // Eliminar el ítem del inventario
+                selectedItem = null;                     // Limpiar la selección actual
+                UpdateItemInfoUI(null);                  // Actualizar la UI para reflejar que no hay ítem seleccionado
+            }
+        }
     }
 
-
+    private void ApplyConsumableEffect(Item item)
+    {
+        
+        PlayerController player = FindObjectOfType<PlayerController>(); 
+        if (player != null)
+        {
+            player.Heal(item.healingAmount); 
+            Debug.Log("Consumible usado: " + item.itemName);
+        }
+    }
+    public void TryEquipSelectedItem()
+    {
+        if (selectedItem != null)
+        {
+            EquipItem(selectedItem);
+            selectedItem = null; // Opcional: Limpiar la selección después de equipar
+            UpdateItemInfoUI(null); // Actualizar la UI para reflejar que no hay ítem seleccionado
+        }
+        else
+        {
+            Debug.Log("No item selected to equip.");
+        }
+    }
+    public void ItemSelected(Item item)
+    {
+        selectedItem = item;  // Actualiza el ítem seleccionado
+        UpdateItemInfoUI(item);  // Actualiza la UI con la información del ítem
+    }
+    public void UpdateItemInfoUI(Item item)
+    {
+        if (item != null)
+        {
+            textMeshProNombre.text = item.itemName;
+            textMeshProDescripcion.text = item.description;
+        }
+        else
+        {
+            textMeshProNombre.text = "Selecciona un ítem";
+            textMeshProDescripcion.text = "";
+        }
+    }
+  
     public void InitializeSlots()
     {
         // Asigna un número fijo de slots, por ejemplo 24 slots (6x4 grid)
-        int numSlots = 24;
+        int numSlots = 60;
         slots.Clear();
         slotIsOccupied = new bool[numSlots]; // Inicializa el array de ocupación
 
@@ -44,25 +200,11 @@ public class Inventario : MonoBehaviour
         }
         Debug.Log("No hay suficiente espacio en el inventario para este item");
     }
-    public void ClearSlots(Item item, int startIndex)
-    {
-        int numColumns = 6; // Configuración de columnas en el GridLayoutGroup
-        for (int y = 0; y < item.size.y; y++)
-        {
-            for (int x = 0; x < item.size.x; x++)
-            {
-                int slotIndex = startIndex + x + y * numColumns;
-                if (slotIndex < slots.Count)
-                {
-                    slotIsOccupied[slotIndex] = false;
-                }
-            }
-        }
-    }
+   
 
     private bool CheckIfFits(Item item, int startIndex)
     {
-        int numColumns = 6; // Asume que el inventario es de 6 slots de ancho
+        int numColumns = 10; // Asume que el inventario es de 6 slots de ancho
         int numRows = slots.Count / numColumns; // Asume una cantidad fija de filas basado en el total de slots
         int row = startIndex / numColumns;
         int column = startIndex % numColumns;
@@ -86,7 +228,7 @@ public class Inventario : MonoBehaviour
 
     public void MarkSlotsAsOccupied(Item item, int startIndex)
     {
-        int numColumns = 6; // Configuración de columnas en el GridLayoutGroup
+        int numColumns = 10; // Configuración de columnas en el GridLayoutGroup
         for (int y = 0; y < item.size.y; y++)
         {
             for (int x = 0; x < item.size.x; x++)
@@ -106,7 +248,7 @@ public class Inventario : MonoBehaviour
         Debug.Log("Placing item: " + item.itemName);
         if (startIndex >= 0 && startIndex < slots.Count)
         {
-            int numColumns = 6; // Configuración de columnas en el GridLayoutGroup
+            int numColumns = 10; // Configuración de columnas en el GridLayoutGroup
             GameObject initialSlot = slots[startIndex];
             GameObject inventoryParent = inventoryPanel.transform.parent.gameObject;  // Parent deseado para los items
 
@@ -152,7 +294,7 @@ public class Inventario : MonoBehaviour
         GridLayoutGroup gridLayout = inventoryPanel.GetComponent<GridLayoutGroup>();
         Vector2 cellSize = gridLayout.cellSize;
         Vector2 spacing = gridLayout.spacing;
-        int numColumns = 6;
+        int numColumns = 10;
 
         for (int i = 0; i < slots.Count; i++)
         {

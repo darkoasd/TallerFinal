@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: CuchilloPrimitivo
   m_EditorClassIdentifier: 
   itemName: CuchilloPrimitivo
-  description: Cuchillo Primitivo
+  description: Cuchillo hecho a base de vidrio con poca durabilidad.
   icon: {fileID: 21300000, guid: f5f972fb4b722c04db79d83610dd1dbe, type: 3}
   size: {x: 1, y: 3}

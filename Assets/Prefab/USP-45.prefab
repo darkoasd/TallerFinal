@@ -116,25 +116,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   "da\xF1o": 10
   rango: 100
-  tiempoEntreDisparos: 0.3
+  tiempoEntreDisparos: 0.6
   municionMaxima: 30
   tiempoApuntar: 0.2
   apuntando: 0
   precisionApuntado: 1
-  precisionDesdeCadera: 0.6
+  precisionDesdeCadera: 1.01
   precisionActual: 0
+  recoil: 0.6
+  recoilRecoveryRate: 1
   umbralDeMiedo: 0.6
+  disparando: 0
   factorReduccionMiedo: 0.021
   municionEnCargador: 9
   municionDeReserva: 21
   capacidadCargador: 9
+  cameraTransform: {fileID: 0}
+  maxVerticalAngle: 10
+  minVerticalAngle: -10
   crosshair: {fileID: 0}
   animator: {fileID: 2320366907069626499}
   bulletHolePrefab: {fileID: 5832436560301247753, guid: 4aa4e7498bd4c4a4db594e271b2cdcf0,
     type: 3}
   ignoreLayers:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 576
+  bulletHoleLifetime: 3
 --- !u!95 &2320366907069626499
 Animator:
   serializedVersion: 5

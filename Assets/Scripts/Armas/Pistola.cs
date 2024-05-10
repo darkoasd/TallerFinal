@@ -1,38 +1,50 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class Pistola : Arma
 {
     public GameObject bulletHolePrefab;
-    public LayerMask ignoreLayers;
+    public LayerMask ignoreLayers;  // Define aquí las capas a ignorar
+    public float bulletHoleLifetime = 5f;  // Tiempo en segundos antes de destruir el bulletHole
+
+
+    //UI
+    public TextMeshProUGUI textoMunicion;
     public override void Disparar()
     {
-        // Verifica si hay munición en el cargador y si ha pasado suficiente tiempo desde el último disparo
+        if (GameManager.instance.IsInventoryOpen())  // Suponiendo que añades este método en GameManager
+        {
+            return;  // No disparar si el inventario está abierto
+        }
         if (municionEnCargador > 0 && Time.time >= tiempoUltimoDisparo + tiempoEntreDisparos)
         {
-            tiempoUltimoDisparo = Time.time;  // Actualiza el tiempo del último disparo
-            municionEnCargador--;  // Decrementa la munición en el cargador
+            animator.SetBool("Disparando", true);
+            StartCoroutine(TiempoDisparo());
+
+            tiempoUltimoDisparo = Time.time;
+            municionEnCargador--;
+            ActualizarTextoMunicion();
+            AplicarRecoil();
+            Vector3 direction = CalcularDireccionDisparo();
 
             RaycastHit hit;
-            Vector3 rayOrigin = Camera.main.transform.position;
-            Vector3 direction = Camera.main.transform.forward;
-
-            if (Physics.Raycast(rayOrigin, direction, out hit, rango, ~ignoreLayers))
+            // Asegúrate de configurar correctamente la LayerMask en el inspector de Unity
+            if (Physics.Raycast(cameraTransform.position, direction, out hit, rango, ~ignoreLayers))
             {
-                if (bulletHolePrefab != null)
+                if (bulletHolePrefab != null && hit.collider.GetComponent<Enemy>() == null)
                 {
-                    Instantiate(bulletHolePrefab, hit.point + hit.normal * 0.001f, Quaternion.LookRotation(hit.normal));
+                    GameObject createdBulletHole = Instantiate(bulletHolePrefab, hit.point + hit.normal * 0.001f, Quaternion.LookRotation(hit.normal));
+                    Destroy(createdBulletHole, bulletHoleLifetime);
                 }
 
-                // Aplica daño a enemigos
                 Enemy saludEnemigo = hit.collider.GetComponent<Enemy>();
                 if (saludEnemigo != null)
                 {
-                    saludEnemigo.RecibirDaño(daño, rayOrigin);
+                    saludEnemigo.RecibirDaño(daño, cameraTransform.position);
                 }
 
-                // Aplica daño a objetos destruibles
                 ObjetoDestruible destructibleTarget = hit.collider.GetComponent<ObjetoDestruible>();
                 if (destructibleTarget != null)
                 {
@@ -42,7 +54,36 @@ public class Pistola : Arma
         }
         else if (municionEnCargador <= 0)
         {
-            Debug.Log("Sin munición, presione 'R' para recargar."); // Mensaje de depuración para indicar que no hay munición
+            Debug.Log("Sin munición, presione 'R' para recargar.");
+        }
+    }
+    public void IncrementarMunicionDeReserva(int cantidad)
+    {
+        municionDeReserva += cantidad;
+        ActualizarTextoMunicion();
+        // Actualiza la UI o cualquier otra lógica necesaria
+    }
+    IEnumerator TiempoDisparo()
+    {
+        yield return new WaitForSeconds(0.1f);
+        animator.SetBool("Disparando", false);
+    }
+
+    protected override void Update()
+    {
+        base.Update();
+
+        if (!GameManager.instance.IsInventoryOpen())
+        {
+            if (Input.GetButtonDown("Fire1"))
+            {
+                Disparar();
+            }
+
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                Recargar();
+            }
         }
     }
 
@@ -55,23 +96,29 @@ public class Pistola : Arma
 
             municionEnCargador += municionARecargar;
             municionDeReserva -= municionARecargar;
+            ActualizarTextoMunicion();
         }
     }
-
-
-    protected override void Update()
+    private void ActualizarTextoMunicion()
     {
-        base.Update();
+        if (textoMunicion != null)
+            textoMunicion.text = $"Munición: {municionEnCargador} / {municionDeReserva}";
+    }
+    private void OnEnable()
+    {
+        if (textoMunicion != null)
+            textoMunicion.gameObject.SetActive(true);
+        ActualizarTextoMunicion();
 
-        if (Input.GetButtonDown("Fire1"))
-        {
-            Disparar();
-        }
+        animator.SetBool("ConPistola", true);
+        animator.SetBool("ConEscopeta", false); // Asegurarte de que la escopeta esté desactivada
+    }
 
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            Recargar();
-        }
+    private void OnDisable()
+    {
+        if (textoMunicion != null)
+            textoMunicion.gameObject.SetActive(false);
 
+        animator.SetBool("ConPistola", false);
     }
 }

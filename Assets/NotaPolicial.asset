@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1be37079263671a48b356eb4484f823d, type: 3}
+  m_Name: NotaPolicial
+  m_EditorClassIdentifier: 
+  itemName: Nota Policial
+  itemImage: {fileID: 21300000, guid: 36eb14b6700a805478778501aa19656c, type: 3}
+  itemDescription: Nota
+  noteText: "\"12 de marzo - No hay respuesta de refuerzos, y el tel\xE9fono lleva
+    horas muerto. Algo terrible est\xE1 sucediendo y no podemos esperar m\xE1s ayuda.
+    He cargado la escopeta y bloqueado la entrada trasera. Si est\xE1s leyendo esto
+    y puedes manejar un arma, no dudes. Lo que sea que est\xE9 ah\xED fuera, no se
+    detiene f\xE1cilmente. Buena suerte.\""

@@ -4,17 +4,17 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
-public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
 {
     private RectTransform dragRectTransform;
     private Canvas canvas;
     private CanvasGroup canvasGroup;
     private Vector2 originalPosition;
-    private Transform originalParent; // Almacena el parent original (GameObject vacío)
+    private Transform originalParent;
     public Image itemImage;
-    public TMPro.TextMeshProUGUI itemNameText;
-    public Item item;  // El item asociado a este DraggableItem
-    public int currentSlotIndex;  // Índice del slot actual donde se encuentra el item
+    
+    public Item item;
+    public int currentSlotIndex;
 
     void Awake()
     {
@@ -27,15 +27,16 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     {
         item = newItem;
         currentSlotIndex = slotIndex;
-        originalParent = parentTransform;  // Configura el parent original cuando se configura el item
+        originalParent = parentTransform;
         if (itemImage != null)
             itemImage.sprite = item.icon;
-        if (itemNameText != null)
-            itemNameText.text = item.itemName;
+       
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        Inventario inventoryScript = FindObjectOfType<Inventario>();
+        inventoryScript.ItemSelected(item);
         originalPosition = dragRectTransform.anchoredPosition;
         dragRectTransform.SetParent(canvas.transform);
         canvasGroup.alpha = 0.6f;
@@ -49,6 +50,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     public void OnEndDrag(PointerEventData eventData)
     {
+
         canvasGroup.alpha = 1f;
         canvasGroup.blocksRaycasts = true;
         Vector2 newPos;
@@ -62,11 +64,23 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
             dragRectTransform.anchoredPosition = newPos;
             currentSlotIndex = newSlotIndex;
+
+            // Actualiza la información del ítem en la UI después de colocarlo
+            inventoryScript.ItemSelected(item);
         }
         else
         {
             dragRectTransform.anchoredPosition = originalPosition;
         }
-        dragRectTransform.SetParent(originalParent);  // Restablece el parentesco al GameObject vacío
+        dragRectTransform.SetParent(originalParent);
+    }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        Inventario inventoryScript = FindObjectOfType<Inventario>();
+        if (inventoryScript != null)
+        {
+            inventoryScript.ItemSelected(item);  // Llama al método ItemSelected en Inventario
+        }
     }
 }

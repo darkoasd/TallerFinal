@@ -16,3 +16,7 @@ MonoBehaviour:
   description: Trapo
   icon: {fileID: 21300000, guid: f5f972fb4b722c04db79d83610dd1dbe, type: 3}
   size: {x: 1, y: 2}
+  itemPrefab: {fileID: 3866826704669790462, guid: deef025cd38458149885251946e278ef,
+    type: 3}
+  itemType: 1
+  healingAmount: 5

@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using TMPro;
 public class Escopeta : Arma
 {
     public GameObject bulletHolePrefab;  // Prefab de Sprite para marcar donde impactan los disparos
@@ -10,6 +10,15 @@ public class Escopeta : Arma
     public float spreadAngle = 15f;      // Ángulo de dispersión de las balas
     public LayerMask groundLayer;        // Máscara de capa específica para el "suelo"
 
+    public TextMeshProUGUI textoMunicion;
+
+
+
+    protected override void Start()
+    {
+        base.Start();
+        ActualizarTextoMunicion();
+    }
     public override void Disparar()
     {
 
@@ -17,6 +26,9 @@ public class Escopeta : Arma
         {
             tiempoUltimoDisparo = Time.time;
             municionEnCargador--;
+            ActualizarTextoMunicion();
+            animator.SetBool("DisparandoEscopeta", true);
+
 
             for (int i = 0; i < numBalas; i++)
             {
@@ -55,13 +67,30 @@ public class Escopeta : Arma
                     }
                 }
             }
+            StartCoroutine(ResetDisparandoEstado());
         }
         else if (municionEnCargador <= 0)
         {
             Debug.Log("Sin munición, presione 'R' para recargar.");  // Recordatorio para recargar
         }
     }
+    public void IncrementarMunicionDeReserva(int cantidad)
+    {
+        municionDeReserva += cantidad;
+        ActualizarTextoMunicion();
+        // Actualiza la UI o cualquier otra lógica necesaria
+    }
+    IEnumerator ResetDisparandoEstado()
+    {
+        yield return new WaitForSeconds(0.1f); // Ajusta este tiempo según la animación de disparo
+        animator.SetBool("DisparandoEscopeta", false);
+    }
 
+    private void ActualizarTextoMunicion()
+    {
+        if (textoMunicion != null)
+            textoMunicion.text = $"Munición: {municionEnCargador} / {municionDeReserva}";
+    }
 
     public void Recargar()
     {
@@ -72,6 +101,7 @@ public class Escopeta : Arma
 
             municionEnCargador += municionARecargar;
             municionDeReserva -= municionARecargar;
+            ActualizarTextoMunicion();
         }
     }
 
@@ -88,6 +118,23 @@ public class Escopeta : Arma
         {
             Recargar();
         }
+        animator.SetBool("ApuntandoEscopeta", Input.GetButton("Fire2"));
+    }
+    private void OnEnable()
+    {
+        if (textoMunicion != null)
+            textoMunicion.gameObject.SetActive(true);
+        ActualizarTextoMunicion();
+
+        animator.SetBool("ConEscopeta", true);
+        animator.SetBool("ConPistola", false); // Asegurarte de que la pistola esté desactivada
+    }
+
+    private void OnDisable()
+    {
+        if (textoMunicion != null)
+            textoMunicion.gameObject.SetActive(false);
+        animator.SetBool("ConEscopeta", false);
     }
 
 }
