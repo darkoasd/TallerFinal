@@ -12,10 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e65bae8ca071e0e4aac681f10fc79e09, type: 3}
   m_Name: Pistola
   m_EditorClassIdentifier: 
-  itemName: USP-45
+  itemName: Pistola
   description: "Pistola semiautom\xE1tica, ideal para corto y medio alcance "
   icon: {fileID: 21300000, guid: c366772a7bcfebe4a9b356ef999e0b36, type: 3}
   size: {x: 2, y: 2}
   itemPrefab: {fileID: 365722069459327380, guid: 6cdf2cd17886152459bd6ea2880895bc,
     type: 3}
   itemType: 0
+  healingAmount: 0

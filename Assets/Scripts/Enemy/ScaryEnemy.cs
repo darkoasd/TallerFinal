@@ -12,7 +12,11 @@ public class ScaryEnemy : Enemy
         {
             agente.SetDestination(hidePosition.position);
             agente.isStopped = false;
-            StartCoroutine(CheckArrivalAndDisappear());
+            Debug.Log("LlegoTriggerHide");
+            //StartCoroutine(CheckArrivalAndDisappear());
+            //Disappear();
+            Invoke("Disappear", 2.5f);
+            
         }
         else
         {
@@ -26,7 +30,7 @@ public class ScaryEnemy : Enemy
         // Espera hasta que el enemigo esté cerca del punto de ocultamiento
         while (!agente.pathPending && agente.remainingDistance > agente.stoppingDistance)
         {
-            yield return null;
+            Debug.Log("Llego");
             yield return new WaitForSeconds(1f);  // Ajusta este tiempo según sea necesario
 
             Disappear();  // Llama a la función de desaparición
@@ -41,6 +45,7 @@ public class ScaryEnemy : Enemy
         Debug.Log("El enemigo se asusta y desaparece");
         agente.isStopped = true;
         gameObject.SetActive(false);  // Opcionalmente, podrías usar Destroy(gameObject); si no planeas reutilizar este enemigo
+        Destroy(gameObject);
     }
 
     protected override void Patrullar()
