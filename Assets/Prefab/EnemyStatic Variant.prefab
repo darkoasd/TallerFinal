@@ -94,7 +94,7 @@ MonoBehaviour:
   saludMaxima: 70
   "da\xF1oDeAtaque": 3
   velocidad: 5
-  "rangoDeVisi\xF3n": 50.2
+  "rangoDeVisi\xF3n": 70.3
   capaDelJugador:
     serializedVersion: 2
     m_Bits: 64
