@@ -15,6 +15,7 @@ MonoBehaviour:
   itemName: Inyeccion de shock
   description: Inyeccion
   icon: {fileID: 21300000, guid: f5f972fb4b722c04db79d83610dd1dbe, type: 3}
-  size: {x: 1, y: 2}
+  size: {x: 1, y: 1}
   itemPrefab: {fileID: 0}
   itemType: 1
+  healingAmount: 0
