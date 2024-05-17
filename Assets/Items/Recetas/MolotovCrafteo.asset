@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 70d938cb6615ac14e850f0b88b901857, type: 3}
+  m_Name: MolotovCrafteo
+  m_EditorClassIdentifier: 
+  result: {fileID: 11400000, guid: 27d53c6773a1c454eb6fa0fd7f92c371, type: 2}
+  ingredients:
+  - item: {fileID: 11400000, guid: 39f63723967d365428a054b22f50f503, type: 2}
+    amount: 2
+  - item: {fileID: 11400000, guid: d98b312e8a888c3499a56cb26a906e35, type: 2}
+    amount: 1

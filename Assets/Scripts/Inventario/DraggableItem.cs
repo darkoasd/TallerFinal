@@ -12,7 +12,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     private Vector2 originalPosition;
     private Transform originalParent;
     public Image itemImage;
-    
+
     public Item item;
     public int currentSlotIndex;
 
@@ -30,7 +30,6 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         originalParent = parentTransform;
         if (itemImage != null)
             itemImage.sprite = item.icon;
-       
     }
 
     public void OnBeginDrag(PointerEventData eventData)
@@ -50,7 +49,6 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     public void OnEndDrag(PointerEventData eventData)
     {
-
         canvasGroup.alpha = 1f;
         canvasGroup.blocksRaycasts = true;
         Vector2 newPos;
@@ -65,7 +63,6 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             dragRectTransform.anchoredPosition = newPos;
             currentSlotIndex = newSlotIndex;
 
-            // Actualiza la información del ítem en la UI después de colocarlo
             inventoryScript.ItemSelected(item);
         }
         else
@@ -80,7 +77,7 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
         Inventario inventoryScript = FindObjectOfType<Inventario>();
         if (inventoryScript != null)
         {
-            inventoryScript.ItemSelected(item);  // Llama al método ItemSelected en Inventario
+            inventoryScript.ItemSelected(item);
         }
     }
 }

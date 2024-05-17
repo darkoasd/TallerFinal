@@ -8,6 +8,7 @@ using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
 public class PlayerController : MonoBehaviour
 {
+
     public Camera cinemachineCamera;
     public Volume damageVolume;
     public float speed = 5.0f;
@@ -93,7 +94,7 @@ public class PlayerController : MonoBehaviour
         currentHealth -= cantidad;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         healthBar.SetHealth(currentHealth);
-       
+
         if (currentHealth <= 0)
         {
             Morir();
@@ -135,7 +136,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // Continúa manejo de la rotación de la cámara fuera del bloque `canMove` para asegurar que la cámara pueda ser ajustada aún después de morir
-        
+
     }
     void HandleCameraRotation()
     {
@@ -292,7 +293,7 @@ public class PlayerController : MonoBehaviour
             canJump = true;
         }
     }
-    
+
 
     public void Heal(int amount)
     {
@@ -309,7 +310,7 @@ public class PlayerController : MonoBehaviour
             canJump = false;
         }
     }
-    public void AdjustSpeed(float amount)
+    public void adjuAdjustSpeed(float amount)
     {
         speed += amount;
     }
@@ -328,7 +329,41 @@ public class PlayerController : MonoBehaviour
 
         }
     }
+    public void AdjustFearIncrement(float amount, float duration)
+    {
+        StartCoroutine(AdjustFearIncrementCoroutine(amount, duration));
+    }
 
+    private IEnumerator AdjustFearIncrementCoroutine(float amount, float duration)
+    {
+        incrementoMiedo -= amount;
+        incrementoMiedo = Mathf.Max(0, incrementoMiedo); // Ensure increment is not negative
+        yield return new WaitForSeconds(duration);
+        incrementoMiedo += amount;
+    }
+    public void AdjustSpeed(float amount, float duration)
+    {
+        StartCoroutine(AdjustSpeedCoroutine(amount, duration));
+    }
+
+    private IEnumerator AdjustSpeedCoroutine(float amount, float duration)
+    {
+        speed += amount;
+        yield return new WaitForSeconds(duration);
+        speed -= amount;
+    }
+    public void SetFearIncrement(float targetValue, float duration)
+    {
+        StartCoroutine(SetFearIncrementCoroutine(targetValue, duration));
+    }
+
+    private IEnumerator SetFearIncrementCoroutine(float targetValue, float duration)
+    {
+        float originalIncrementoMiedo = incrementoMiedo;
+        incrementoMiedo = targetValue;
+        yield return new WaitForSeconds(duration);
+        incrementoMiedo = originalIncrementoMiedo;
+    }
     void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("DoorTrigger"))

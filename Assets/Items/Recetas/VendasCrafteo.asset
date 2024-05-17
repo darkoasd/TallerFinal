@@ -9,12 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e65bae8ca071e0e4aac681f10fc79e09, type: 3}
-  m_Name: Tela
+  m_Script: {fileID: 11500000, guid: 70d938cb6615ac14e850f0b88b901857, type: 3}
+  m_Name: VendasCrafteo
   m_EditorClassIdentifier: 
-  itemName: Tela
-  description: Trapo
-  icon: {fileID: 21300000, guid: f5f972fb4b722c04db79d83610dd1dbe, type: 3}
-  size: {x: 1, y: 2}
-  itemPrefab: {fileID: 0}
-  itemType: 2
+  result: {fileID: 11400000, guid: 134762beef97f3f40b3eb62381f0b9e2, type: 2}
+  ingredients:
+  - item: {fileID: 11400000, guid: 39f63723967d365428a054b22f50f503, type: 2}
+    amount: 3

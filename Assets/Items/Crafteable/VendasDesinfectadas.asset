@@ -10,11 +10,17 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e65bae8ca071e0e4aac681f10fc79e09, type: 3}
-  m_Name: Vidrio
+  m_Name: VendasDesinfectadas
   m_EditorClassIdentifier: 
-  itemName: Vidrio
-  description: Vi
+  itemName: Venda Desinfectada
+  description: Cura medianamente tu vida
   icon: {fileID: 21300000, guid: f5f972fb4b722c04db79d83610dd1dbe, type: 3}
-  size: {x: 1, y: 1}
-  itemPrefab: {fileID: 0}
+  size: {x: 1, y: 2}
+  itemPrefab: {fileID: 3866826704669790462, guid: deef025cd38458149885251946e278ef,
+    type: 3}
   itemType: 2
+  healingAmount: 6
+  speedModifier: 0
+  fearIncrementModifier: 0
+  fearIncrementReductionTarget: 0
+  duration: 0

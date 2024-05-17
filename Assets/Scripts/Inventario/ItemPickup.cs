@@ -6,6 +6,7 @@ public class ItemPickup : MonoBehaviour
 {
     public Item item;
     private bool isPlayerNear = false;
+
     private void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Player"))

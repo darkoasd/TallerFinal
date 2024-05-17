@@ -250,7 +250,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 848
+  m_VersionIndex: 854
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -394,11 +394,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0f0324d8d820ded448131e6beb99dc29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  health: 10
+  health: 5
   itemPrefabs:
-  - {fileID: 6297949072603872814, guid: f4dc55e74a3ff624cbd4084f2635d4e5, type: 3}
-  - {fileID: 2206795597191543711, guid: b6d882daa85cd6c4db163b1ce5bcace1, type: 3}
-  - {fileID: 3866826704669790462, guid: deef025cd38458149885251946e278ef, type: 3}
-  - {fileID: 6323948426962973085, guid: 16ffe0d298abdad47910a73b9bc1dddb, type: 3}
   - {fileID: 3663953172021340694, guid: 51c07543e2b3b4a46bf215e78bd5a158, type: 3}
-  dropProbability: 0.8
+  - {fileID: 1916900864036079540, guid: f3076706cf3f8f44c9e590e2d1eef3a9, type: 3}
+  - {fileID: 4384158490376585571, guid: 9dfa2036ce8b3d14ab608a224a3b2777, type: 3}
+  - {fileID: 3866826704669790462, guid: deef025cd38458149885251946e278ef, type: 3}
+  - {fileID: 6414187263316870273, guid: 3a913debaab7df646a47a5cbaa307885, type: 3}
+  - {fileID: 2206795597191543711, guid: b6d882daa85cd6c4db163b1ce5bcace1, type: 3}
+  - {fileID: 8856270842566289665, guid: 613327b1888bb594198857d6c507b284, type: 3}
+  - {fileID: 1916900864036079540, guid: f3076706cf3f8f44c9e590e2d1eef3a9, type: 3}
+  - {fileID: 6535644727782957218, guid: 245e08d468f78d947b957b3cf2c91295, type: 3}
+  dropProbability: 0.7

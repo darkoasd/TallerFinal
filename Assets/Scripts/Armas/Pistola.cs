@@ -9,8 +9,7 @@ public class Pistola : Arma
     public LayerMask ignoreLayers;  // Define aquí las capas a ignorar
     public float bulletHoleLifetime = 5f;  // Tiempo en segundos antes de destruir el bulletHole
 
-
-    //UI
+    // UI
     public TextMeshProUGUI textoMunicion;
     public override void Disparar()
     {
@@ -61,8 +60,8 @@ public class Pistola : Arma
     {
         municionDeReserva += cantidad;
         ActualizarTextoMunicion();
-        // Actualiza la UI o cualquier otra lógica necesaria
     }
+
     IEnumerator TiempoDisparo()
     {
         yield return new WaitForSeconds(0.1f);
@@ -99,11 +98,13 @@ public class Pistola : Arma
             ActualizarTextoMunicion();
         }
     }
-    private void ActualizarTextoMunicion()
+
+    public void ActualizarTextoMunicion()
     {
         if (textoMunicion != null)
             textoMunicion.text = $"Munición: {municionEnCargador} / {municionDeReserva}";
     }
+
     private void OnEnable()
     {
         if (textoMunicion != null)
@@ -111,7 +112,7 @@ public class Pistola : Arma
         ActualizarTextoMunicion();
 
         animator.SetBool("ConPistola", true);
-        animator.SetBool("ConEscopeta", false); // Asegurarte de que la escopeta esté desactivada
+        animator.SetBool("ConEscopeta", false);
     }
 
     private void OnDisable()

@@ -8,19 +8,20 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance;
     public GameObject inventoryUI;
-    public GameObject inventoryArtifacts; // GameObject para el inventario de artefactos
+    public GameObject inventoryArtifacts;
     public GameObject gameOverScreen;
     public GameObject pauseMenuUI;
     public GameObject inventoryButtons;
+
     void Awake()
     {
         if (instance != null)
         {
-            Destroy(gameObject); // Destruye el nuevo objeto si ya existe una instancia
+            Destroy(gameObject);
             return;
         }
         instance = this;
-        DontDestroyOnLoad(gameObject); 
+        DontDestroyOnLoad(gameObject);
     }
 
     void Start()
@@ -28,17 +29,19 @@ public class GameManager : MonoBehaviour
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
         pauseMenuUI.SetActive(false);
-       
-        inventoryArtifacts.SetActive(false);
+        HideInventory(inventoryArtifacts);
+        inventoryButtons.SetActive(false);
     }
+
     public void OpenMainInventory()
     {
         Debug.Log("Opening Inventory");
-        inventoryUI.SetActive(true);
-        inventoryArtifacts.SetActive(false);
+        ShowInventory(inventoryUI);
+        HideInventory(inventoryArtifacts);
         UpdateCursor(true);
         UpdatePlayerControllerInventoryStatus(true);
     }
+
     public bool IsInventoryOpen()
     {
         return inventoryUI.activeSelf || inventoryArtifacts.activeSelf;
@@ -46,19 +49,51 @@ public class GameManager : MonoBehaviour
 
     public void OpenArtifactInventory()
     {
-        inventoryUI.SetActive(false);
-        inventoryArtifacts.SetActive(true);
+        HideInventory(inventoryUI);
+        ShowInventory(inventoryArtifacts);
+        UpdateCursor(true);
+        UpdatePlayerControllerInventoryStatus(true);
+    }
+
+    public void OpenCraftingInventory()
+    {
+        HideInventory(inventoryUI);
+        HideInventory(inventoryArtifacts);
         UpdateCursor(true);
         UpdatePlayerControllerInventoryStatus(true);
     }
 
     public void CloseInventories()
     {
-        inventoryUI.SetActive(false);
-        inventoryArtifacts.SetActive(false);
+        HideInventory(inventoryUI);
+        HideInventory(inventoryArtifacts);
         UpdateCursor(false);
         UpdatePlayerControllerInventoryStatus(false);
     }
+
+    void ShowInventory(GameObject inventory)
+    {
+        inventory.SetActive(true); // Asegúrate de que el inventario está activo
+        foreach (Transform child in inventory.transform)
+        {
+            child.gameObject.SetActive(true);
+        }
+    }
+
+    void HideInventory(GameObject inventory)
+    {
+        foreach (Transform child in inventory.transform)
+        {
+            child.gameObject.SetActive(false);
+        }
+        inventory.SetActive(false); // Asegúrate de que el inventario está inactivo
+    }
+
+    bool IsInventoryVisible(GameObject inventory)
+    {
+        return inventory.activeSelf;
+    }
+
     void UpdateCursor(bool isVisible)
     {
         Cursor.visible = isVisible;
@@ -85,29 +120,20 @@ public class GameManager : MonoBehaviour
         {
             TogglePauseMenu();
         }
-
     }
 
     public void ToggleInventory()
     {
-        bool anyInventoryActive = inventoryUI.activeSelf || inventoryArtifacts.activeSelf;
-
-        if (anyInventoryActive)
+        if (IsInventoryOpen())
         {
-            inventoryUI.SetActive(false);
-            inventoryArtifacts.SetActive(false);
-            inventoryButtons.SetActive(false);
-            UpdateCursor(false);
-            UpdatePlayerControllerInventoryStatus(false);
+            CloseInventories();
         }
         else
         {
-            inventoryUI.SetActive(true);
-            inventoryArtifacts.SetActive(false);
-            inventoryButtons.SetActive(true);
-            UpdateCursor(true);
-            UpdatePlayerControllerInventoryStatus(true);
+            OpenMainInventory();
         }
+
+        inventoryButtons.SetActive(IsInventoryOpen());
     }
 
     void ShowCursor()
@@ -148,13 +174,10 @@ public class GameManager : MonoBehaviour
     {
         SceneManager.LoadScene("Nivel1");
         StartCoroutine(ResetPlayerStateAfterLoad());
-       
-
-
     }
+
     IEnumerator ResetPlayerStateAfterLoad()
     {
-        // Espera un frame después de cargar la escena para que todos los scripts se hayan inicializado
         yield return null;
 
         PlayerController playerController = FindObjectOfType<PlayerController>();
@@ -163,7 +186,7 @@ public class GameManager : MonoBehaviour
             gameOverScreen.SetActive(false);
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
-            playerController.Reiniciar(); // Reinicia el estado del jugador
+            playerController.Reiniciar();
         }
     }
 
@@ -178,7 +201,7 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 1f;
         gameOverScreen.SetActive(false);
         pauseMenuUI.SetActive(false);
-        inventoryUI.SetActive(false);
-        inventoryArtifacts.SetActive(false);
+        HideInventory(inventoryUI);
+        HideInventory(inventoryArtifacts);
     }
 }

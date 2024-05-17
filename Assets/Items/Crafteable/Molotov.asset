@@ -10,11 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e65bae8ca071e0e4aac681f10fc79e09, type: 3}
-  m_Name: BebidaEnergetica
+  m_Name: Molotov
   m_EditorClassIdentifier: 
-  itemName: BebidaEnergetica
-  description: Al tomarla conseguiras +10% de energia corriendo
+  itemName: Molotov
+  description: Molotov
   icon: {fileID: 21300000, guid: f5f972fb4b722c04db79d83610dd1dbe, type: 3}
   size: {x: 1, y: 2}
   itemPrefab: {fileID: 0}
-  itemType: 1
+  itemType: 0
+  healingAmount: 0

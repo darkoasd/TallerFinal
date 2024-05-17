@@ -5,35 +5,32 @@ using UnityEngine.UI;
 using TMPro;
 public class Inventario : MonoBehaviour
 {
-    public GameObject inventoryPanel;  // Panel de UI que contiene el GridLayoutGroup
-    public GameObject slotPrefab;      // Prefab para los slots en el inventario
-    public GameObject itemPrefab;      // Prefab para los items en el inventario
-    private List<GameObject> slots = new List<GameObject>(); // Lista de slots en el inventario
-    private bool[] slotIsOccupied; // Array para mantener el estado ocupado de cada slot
+    public GameObject inventoryPanel;
+    public GameObject slotPrefab;
+    public GameObject itemPrefab;
+    private List<GameObject> slots = new List<GameObject>();
+    private bool[] slotIsOccupied;
 
-    //UI
     public TextMeshProUGUI textMeshProNombre;
     public TextMeshProUGUI textMeshProDescripcion;
     public GameObject playerHands;
     public Animator handsAnimator;
-    private Item selectedItem;  // Ítem actualmente seleccionado
+    private Item selectedItem;
+    private Item currentEquippedWeapon;  // Variable para guardar el arma equipada actual
+
     void Start()
     {
         InitializeSlots();
-        
     }
+
     void Awake()
     {
-        if (inventoryPanel != null)
-        {
-           
-         
-        }
-        else
+        if (inventoryPanel == null)
         {
             Debug.LogError("Inventory panel is not assigned!");
         }
     }
+
     public void EquipItem(Item item)
     {
         if (handsAnimator == null)
@@ -42,32 +39,31 @@ public class Inventario : MonoBehaviour
             return;
         }
 
-        // Primero desactivar todos los parámetros para evitar superposiciones
         handsAnimator.SetBool("ConPistola", false);
         handsAnimator.SetBool("ConEscopeta", false);
         handsAnimator.SetBool("Disparando", false);
         handsAnimator.SetBool("DisparandoEscopeta", false);
+
         if (item == null)
         {
-            // Desactiva cualquier arma
             foreach (Transform child in playerHands.transform)
             {
                 child.gameObject.SetActive(false);
             }
+            currentEquippedWeapon = null;  // Desactivar el arma equipada actual
             return;
         }
 
-        // Desactiva todos los ítems/objetos armas activos
         foreach (Transform child in playerHands.transform)
         {
             child.gameObject.SetActive(false);
         }
 
-        // Activa la arma específica basada en el tipo de ítem
         Transform weaponTransform = playerHands.transform.Find(item.itemName);
         if (weaponTransform != null)
         {
             weaponTransform.gameObject.SetActive(true);
+            currentEquippedWeapon = item;  // Actualizar el arma equipada actual
             if (item.itemType == ItemType.Weapon)
             {
                 switch (item.itemName)
@@ -86,24 +82,40 @@ public class Inventario : MonoBehaviour
             Debug.LogError("Assigned weapon not found in playerHands children.");
         }
     }
-    private void RemoveItemFromInventory(Item item)
-    {
 
-        // Encuentra y destruye el objeto UI del ítem en el inventario
+    public void RemoveItemFromInventory(Item item, int quantity)
+    {
+        int count = 0;
+
         for (int i = 0; i < slots.Count; i++)
         {
             DraggableItem draggableItem = slots[i].GetComponentInChildren<DraggableItem>();
             if (draggableItem != null && draggableItem.item == item)
             {
-                slotIsOccupied[i] = false;  // Marca el slot como no ocupado
-                Destroy(draggableItem.gameObject);  // Destruye el objeto del ítem
-                break;
+                slotIsOccupied[i] = false;
+                Destroy(draggableItem.gameObject);
+                count++;
+                if (count >= quantity)
+                    return;
+            }
+        }
+
+        DraggableItem[] draggableItems = GetComponentsInChildren<DraggableItem>();
+        foreach (var draggableItem in draggableItems)
+        {
+            if (draggableItem.item == item)
+            {
+                Destroy(draggableItem.gameObject);
+                count++;
+                if (count >= quantity)
+                    return;
             }
         }
     }
+
     public void ClearSlots(Item item, int startIndex)
     {
-        int numColumns = 10; // Configuración de columnas en el GridLayoutGroup
+        int numColumns = 10;
         for (int y = 0; y < item.size.y; y++)
         {
             for (int x = 0; x < item.size.x; x++)
@@ -116,49 +128,52 @@ public class Inventario : MonoBehaviour
             }
         }
     }
+
     public void UseSelectedItem()
     {
-        if (selectedItem != null && selectedItem.itemType == ItemType.Consumable)
+        if (selectedItem != null)
         {
             PlayerController player = FindObjectOfType<PlayerController>();
             if (player != null)
             {
-                player.Heal(selectedItem.healingAmount);  // Curar al jugador con la cantidad especificada
-                RemoveItemFromInventory(selectedItem);   // Eliminar el ítem del inventario
-                selectedItem = null;                     // Limpiar la selección actual
-                UpdateItemInfoUI(null);                  // Actualizar la UI para reflejar que no hay ítem seleccionado
+                selectedItem.ApplyEffect(player);
+                RemoveItemFromInventory(selectedItem, 1);
+                selectedItem = null;
+                UpdateItemInfoUI(null);
             }
         }
     }
 
     private void ApplyConsumableEffect(Item item)
     {
-        
-        PlayerController player = FindObjectOfType<PlayerController>(); 
+        PlayerController player = FindObjectOfType<PlayerController>();
         if (player != null)
         {
-            player.Heal(item.healingAmount); 
+            player.Heal(item.healingAmount);
             Debug.Log("Consumible usado: " + item.itemName);
         }
     }
+
     public void TryEquipSelectedItem()
     {
         if (selectedItem != null)
         {
             EquipItem(selectedItem);
-            selectedItem = null; // Opcional: Limpiar la selección después de equipar
-            UpdateItemInfoUI(null); // Actualizar la UI para reflejar que no hay ítem seleccionado
+            selectedItem = null;
+            UpdateItemInfoUI(null);
         }
         else
         {
             Debug.Log("No item selected to equip.");
         }
     }
+
     public void ItemSelected(Item item)
     {
-        selectedItem = item;  // Actualiza el ítem seleccionado
-        UpdateItemInfoUI(item);  // Actualiza la UI con la información del ítem
+        selectedItem = item;
+        UpdateItemInfoUI(item);
     }
+
     public void UpdateItemInfoUI(Item item)
     {
         if (item != null)
@@ -172,48 +187,46 @@ public class Inventario : MonoBehaviour
             textMeshProDescripcion.text = "";
         }
     }
-  
+
     public void InitializeSlots()
     {
-        // Asigna un número fijo de slots, por ejemplo 24 slots (6x4 grid)
         int numSlots = 60;
         slots.Clear();
-        slotIsOccupied = new bool[numSlots]; // Inicializa el array de ocupación
+        slotIsOccupied = new bool[numSlots];
 
         for (int i = 0; i < numSlots; i++)
         {
             GameObject slot = Instantiate(slotPrefab, inventoryPanel.transform);
             slots.Add(slot);
-            slotIsOccupied[i] = false; // Todos los slots comienzan como no ocupados
+            slotIsOccupied[i] = false;
         }
     }
+
     public void AddItem(Item item)
     {
-        // Intentar encontrar un lugar en el inventario donde el item pueda ser colocado
         for (int i = 0; i < slots.Count; i++)
         {
-            if (!slotIsOccupied[i] && CheckIfFits(item, i)) // Asegúrate de verificar si el slot está ocupado
+            if (!slotIsOccupied[i] && CheckIfFits(item, i))
             {
                 PlaceItemInSlots(item, i);
+                Debug.Log("Item added: " + item.itemName);
+                ReequipCurrentWeapon();  // Reequipar el arma actual después de añadir un ítem
                 return;
             }
         }
         Debug.Log("No hay suficiente espacio en el inventario para este item");
     }
-   
 
     private bool CheckIfFits(Item item, int startIndex)
     {
-        int numColumns = 10; // Asume que el inventario es de 6 slots de ancho
-        int numRows = slots.Count / numColumns; // Asume una cantidad fija de filas basado en el total de slots
+        int numColumns = 10;
+        int numRows = slots.Count / numColumns;
         int row = startIndex / numColumns;
         int column = startIndex % numColumns;
 
-        // Verifica si el item se sale de los límites del inventario
         if (column + item.size.x > numColumns || row + item.size.y > numRows)
             return false;
 
-        // Verifica si algún slot necesario está ya ocupado
         for (int y = 0; y < item.size.y; y++)
         {
             for (int x = 0; x < item.size.x; x++)
@@ -228,7 +241,7 @@ public class Inventario : MonoBehaviour
 
     public void MarkSlotsAsOccupied(Item item, int startIndex)
     {
-        int numColumns = 10; // Configuración de columnas en el GridLayoutGroup
+        int numColumns = 10;
         for (int y = 0; y < item.size.y; y++)
         {
             for (int x = 0; x < item.size.x; x++)
@@ -242,29 +255,26 @@ public class Inventario : MonoBehaviour
         }
     }
 
-
     private void PlaceItemInSlots(Item item, int startIndex)
     {
         Debug.Log("Placing item: " + item.itemName);
         if (startIndex >= 0 && startIndex < slots.Count)
         {
-            int numColumns = 10; // Configuración de columnas en el GridLayoutGroup
+            int numColumns = 10;
             GameObject initialSlot = slots[startIndex];
-            GameObject inventoryParent = inventoryPanel.transform.parent.gameObject;  // Parent deseado para los items
+            GameObject inventoryParent = inventoryPanel.transform.parent.gameObject;
 
-            // Instancia el item prefab en el inventario
             GameObject itemUI = Instantiate(itemPrefab, inventoryParent.transform);
             DraggableItem draggableComponent = itemUI.GetComponent<DraggableItem>();
 
-            // Configura el item usando el script DraggableItem, pasando también el parent original
             if (draggableComponent != null)
             {
-                draggableComponent.SetupItem(item, startIndex, inventoryParent.transform);  // Pasando el Transform del parent deseado
+                draggableComponent.SetupItem(item, startIndex, inventoryParent.transform);
             }
             else
             {
                 Debug.LogError("DraggableItem component not found on item prefab!");
-                return;  // Detiene la ejecución si no se encuentra el componente
+                return;
             }
 
             RectTransform itemRect = itemUI.GetComponent<RectTransform>();
@@ -282,10 +292,10 @@ public class Inventario : MonoBehaviour
             itemRect.anchoredPosition = new Vector2(posX, posY);
             itemRect.sizeDelta = new Vector2(cellSize.x * item.size.x + spacing.x * (item.size.x - 1), cellSize.y * item.size.y + spacing.y * (item.size.y - 1));
 
-            // Marcar slots como ocupados
             MarkSlotsAsOccupied(item, startIndex);
         }
     }
+
     public bool TryGetPositionForItem(Item item, RectTransform itemRect, Vector2 position, out Vector2 newPos, out int newSlotIndex)
     {
         newPos = new Vector2();
@@ -326,5 +336,63 @@ public class Inventario : MonoBehaviour
             }
         }
         return false;
+    }
+
+    public bool HasItem(string itemName, int quantity)
+    {
+        int count = 0;
+        foreach (var slot in slots)
+        {
+            DraggableItem draggableItem = slot.GetComponentInChildren<DraggableItem>(true);
+            if (draggableItem != null && draggableItem.item.itemName == itemName)
+            {
+                count++;
+                Debug.Log($"Found {count} of {itemName}");
+                if (count >= quantity) return true;
+            }
+        }
+
+        DraggableItem[] draggableItems = GetComponentsInChildren<DraggableItem>(true);
+        foreach (var draggableItem in draggableItems)
+        {
+            if (draggableItem.item.itemName == itemName)
+            {
+                count++;
+                Debug.Log($"Found {count} of {itemName} in external items");
+                if (count >= quantity) return true;
+            }
+        }
+        Debug.Log($"Only found {count} of {itemName}, needed {quantity}");
+        return false;
+    }
+
+    public int GetItemCount(string itemName)
+    {
+        int count = 0;
+        foreach (var slot in slots)
+        {
+            DraggableItem draggableItem = slot.GetComponentInChildren<DraggableItem>();
+            if (draggableItem != null && draggableItem.item.itemName == itemName)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    private void ReequipCurrentWeapon()
+    {
+        if (currentEquippedWeapon != null)
+        {
+            EquipItem(currentEquippedWeapon);
+            // Asegúrate de que el script del arma esté habilitado
+            Pistola pistola = playerHands.transform.Find(currentEquippedWeapon.itemName)?.GetComponent<Pistola>();
+            if (pistola != null)
+            {
+                pistola.enabled = false; // Deshabilitar temporalmente
+                pistola.enabled = true;  // Volver a habilitar
+                pistola.ActualizarTextoMunicion(); // Actualizar la UI de munición
+            }
+        }
     }
 }
