@@ -6,27 +6,34 @@ using Cinemachine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 using UnityEngine.SceneManagement;
+using TMPro;
 public class PlayerController : MonoBehaviour
 {
-
+    public TextMeshProUGUI thoughtDisplay;
+    public TextMeshProUGUI inspectPrompt;
+    public TextMeshProUGUI itemFoundMessage;
+    public Inventario inventory;
     public Camera cinemachineCamera;
     public Volume damageVolume;
     public float speed = 5.0f;
     public float mouseSensitivity = 2.0f;
     public float jumpForce = 5.0f;
+    public float gravity = -9.81f;
     public float maxPitch = 90.0f;
     public float minPitch = -90.0f;
     float xRotation = 0f;
     float yRotation = 0f;
     public AudioClip sonidoSalto;
+    public AudioClip sonidoBajaVida; // Clip de sonido para baja vida
     public Healthbar healthBar;
 
     public bool isInventoryOpen = false;
-    private Rigidbody rb;
+    private CharacterController controller;
     private float pitch = 0.0f;
 
     public float runSpeed = 10.0f;
     private bool canJump = true;
+    private float verticalVelocity = 0f;
 
     public Arma armaScript;
 
@@ -34,54 +41,68 @@ public class PlayerController : MonoBehaviour
     public float maxHealth = 10;
 
     public bool canMove = true;
-
-    public float aimingSpeed = 2.5f; // Velocidad de movimiento más baja cuando apuntas
-    private bool isAiming = false; // Controla si el jugador está apuntando
-                                   //Miedo
+    public KeyInventory keyInventory;
+    public float aimingSpeed = 2.5f;
+    private bool isAiming = false;
 
     public float nivelDeMiedo = 0f;
-    public float incrementoMiedo = 0.1f; // Cantidad de miedo que aumenta por frame al ver a un enemigo
-    public float decrementoMiedo = 0.01f; // Cantidad de miedo que disminuye por frame cuando no ve a enemigos
-    public float maxMiedo = 1f; // Máximo nivel de miedo
-                                //Inventario
-
-    //Puerta
+    public float incrementoMiedo = 0.1f;
+    public float decrementoMiedo = 0.01f;
+    public float maxMiedo = 1f;
+    [SerializeField] private float fearRadius = 10.0f; // Nuevo rango de miedo visible en el editor
+    [SerializeField] private bool showFearRadius = true;
 
     private bool inTriggerZone = false;
     private DoorController currentDoor;
 
     public Vector3 posicionSpawnPlayer;
+
+    // Variables para daño por caída
+    public float fallThreshold = 5.0f;
+    public float fallDamageMultiplier = 2.0f;
+    private float lastGroundedY;
+    private bool isFalling = false;
+
+    private AudioSource audioSource;
+
     void Start()
     {
-        rb = GetComponent<Rigidbody>();
-        rb.freezeRotation = true;
-        rb = GetComponent<Rigidbody>();
+        keyInventory = GetComponent<KeyInventory>();
+        if (keyInventory == null)
+        {
+            Debug.LogError("KeyInventory component not found on player.");
+        }
+        controller = GetComponent<CharacterController>();
+        controller.slopeLimit = 45.0f; // Ajusta esto según tus necesidades
+
         currentHealth = maxHealth;
         healthBar.SetMaxHealth(maxHealth);
-        canMove = true; // Asegura que el jugador puede moverse
+        canMove = true;
 
-        Cursor.visible = false; // Oculta el cursor
+        Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
 
         posicionSpawnPlayer = transform.position;
+        lastGroundedY = transform.position.y; // Inicializa con la posición inicial del jugador
 
+        audioSource = GetComponent<AudioSource>();
     }
+
     void Awake()
     {
         SceneManager.sceneLoaded += OnSceneLoaded;
         DontDestroyOnLoad(gameObject);
     }
 
-
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "MainMenu")  // Cambia "MainMenu" por el nombre real de tu escena de menú
+        if (scene.name == "MainMenu")
         {
-            gameObject.SetActive(false);  // Desactiva al jugador en el menú
+            gameObject.SetActive(false);
         }
         else
         {
-            gameObject.SetActive(true);  // Reactiva al jugador en escenas de juego
+            gameObject.SetActive(true);
         }
     }
 
@@ -89,58 +110,73 @@ public class PlayerController : MonoBehaviour
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
+
     public void RecibirDaño(float cantidad)
     {
         currentHealth -= cantidad;
         currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
         healthBar.SetHealth(currentHealth);
 
+        if (currentHealth <= maxHealth * 0.4f) // Si la vida es menor o igual al 40%
+        {
+            if (!audioSource.isPlaying)
+            {
+                audioSource.clip = sonidoBajaVida;
+                audioSource.loop = true; // Hacer que el sonido se repita
+                audioSource.Play(); // Reproducir el sonido
+            }
+        }
+        else if (audioSource.clip == sonidoBajaVida && audioSource.isPlaying)
+        {
+            audioSource.Stop(); // Detener el sonido si la vida está por encima del 40%
+        }
+
         if (currentHealth <= 0)
         {
             Morir();
         }
     }
+
     public void Reiniciar()
     {
-        transform.position = posicionSpawnPlayer; // Resetea la posición del jugador a la inicial
+        transform.position = posicionSpawnPlayer;
         canMove = true;
         currentHealth = maxHealth;
         isInventoryOpen = false;
         healthBar.SetMaxHealth(maxHealth);
         healthBar.SetHealth(maxHealth);
+        audioSource.Stop(); // Detener el sonido al reiniciar
     }
+
     public void Morir()
     {
-        print("Muerto"); // Mensaje en consola
-        GameManager.instance.GameOver(); // Notifica al GameManager que el juego ha terminado
-        canMove = false; // Desactiva el movimiento del jugador
-
         print("Muerto");
+        GameManager.instance.GameOver();
+        canMove = false;
     }
 
     void Update()
     {
-        if (canMove && !isInventoryOpen)  // Asegúrate de que todas las acciones del jugador están dentro de esta verificación
+        if (canMove && !isInventoryOpen)
         {
             HandleCameraRotation();
             MovePlayer();
             ApplyCameraTremble(nivelDeMiedo);
             UpdateFearLevel();
-            HandleJumping();
             UpdateAimingStatus();
 
             if (inTriggerZone && Input.GetKeyDown(KeyCode.E) && currentDoor != null)
             {
                 currentDoor.ToggleDoor(GetComponent<KeyInventory>());
             }
+
+            CheckFallDamage();
         }
-
-        // Continúa manejo de la rotación de la cámara fuera del bloque `canMove` para asegurar que la cámara pueda ser ajustada aún después de morir
-
     }
+
     void HandleCameraRotation()
     {
-        if (!isInventoryOpen)  // Solo permitir la rotación de la cámara si el inventario no está abierto
+        if (!isInventoryOpen)
         {
             float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
             float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
@@ -152,24 +188,30 @@ public class PlayerController : MonoBehaviour
             transform.localRotation = Quaternion.Euler(xRotation, yRotation, 0f);
         }
     }
+
     void UpdateFearLevel()
     {
         bool enemySeen = false;
-        int layerMask = LayerMask.GetMask("Enemy", "Obstaculos");  // Incluye las layers de enemigos y obstáculos
-        float sphereRadius = 5.0f; // Configura el radio de tu SphereCast
+        int layerMask = LayerMask.GetMask("Enemy", "Obstaculos");
 
-        RaycastHit[] hits = Physics.SphereCastAll(transform.position, sphereRadius, transform.forward, 100, layerMask);
-        foreach (var hit in hits)
+        Collider[] enemiesInRange = Physics.OverlapSphere(transform.position, fearRadius, layerMask);
+
+        foreach (var enemy in enemiesInRange)
         {
-            if (hit.collider.CompareTag("Enemy1") || hit.collider.CompareTag("Enemy2"))
+            if (enemy.CompareTag("Enemy1") || enemy.CompareTag("Enemy2"))
             {
-                // Verificar si hay obstáculos entre el jugador y el enemigo detectado
-                if (!IsBlockedByObstacle(transform.position, hit.point))
+                Vector3 directionToEnemy = (enemy.transform.position - transform.position).normalized;
+                float dotProduct = Vector3.Dot(transform.forward, directionToEnemy);
+
+                if (dotProduct > 0.5f)
                 {
-                    float fearIncrement = hit.collider.CompareTag("Enemy1") ? incrementoMiedo * 2 : incrementoMiedo * 0.5f;
-                    nivelDeMiedo = Mathf.Min(nivelDeMiedo + fearIncrement * Time.deltaTime, maxMiedo);
-                    enemySeen = true;
-                    break;  // Salir del bucle si ya se ha encontrado un enemigo visible
+                    if (!IsBlockedByObstacle(transform.position, enemy.transform.position))
+                    {
+                        float fearIncrement = enemy.CompareTag("Enemy1") ? incrementoMiedo * 2 : incrementoMiedo * 0.5f;
+                        nivelDeMiedo = Mathf.Min(nivelDeMiedo + fearIncrement * Time.deltaTime, maxMiedo);
+                        enemySeen = true;
+                        break;
+                    }
                 }
             }
         }
@@ -179,22 +221,31 @@ public class PlayerController : MonoBehaviour
             nivelDeMiedo = Mathf.Max(nivelDeMiedo - (decrementoMiedo * 2) * Time.deltaTime, 0);
         }
     }
+
+    void OnDrawGizmos()
+    {
+        if (showFearRadius)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(transform.position, fearRadius);
+        }
+    }
+
     bool IsBlockedByObstacle(Vector3 startPosition, Vector3 enemyPosition)
     {
         Vector3 direction = enemyPosition - startPosition;
         float distance = direction.magnitude;
         direction.Normalize();
 
-        // Chequea si hay un obstáculo en el camino
         if (Physics.Raycast(startPosition, direction, out RaycastHit hit, distance, LayerMask.GetMask("Obstaculos")))
         {
-            return true; // Hay un obstáculo
+            return true;
         }
-        return false; // No hay obstáculos
+        return false;
     }
+
     void ApplyCameraTremble(float fearLevel)
     {
-        // Define el umbral a la mitad del máximo miedo, que es 0.5 si maxMiedo es 1
         float fearThreshold = 0.5f;
 
         if (fearLevel > fearThreshold)
@@ -210,15 +261,16 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            // Restablece la rotación de la cámara suavemente asegurando que la rotación Y vuelve a cero
-            Quaternion targetRotation = Quaternion.Euler(pitch, 0, 0); // Asegúrate de que el segundo parámetro es cero para el eje Y
+            Quaternion targetRotation = Quaternion.Euler(pitch, 0, 0);
             cinemachineCamera.transform.localRotation = Quaternion.Lerp(cinemachineCamera.transform.localRotation, targetRotation, Time.deltaTime * 5);
         }
     }
+
     public void EnableMovement(bool enable)
     {
         canMove = enable;
     }
+
     void AdjustVerticalCameraRotation(float rotation)
     {
         float fearThreshold = 0.5f;
@@ -228,7 +280,6 @@ public class PlayerController : MonoBehaviour
             float trembleAmount = trembleIntensity * 0.3f;
             rotation += Random.Range(-trembleAmount, trembleAmount);
         }
-
 
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
@@ -254,8 +305,7 @@ public class PlayerController : MonoBehaviour
     {
         float currentSpeed = speed;
 
-        // Cambia la velocidad y la precisión si el jugador está corriendo
-        if (Input.GetKey(KeyCode.LeftShift) && !isAiming) // Asegúrate de que el jugador no pueda correr mientras apunta
+        if (Input.GetKey(KeyCode.LeftShift) && !isAiming)
         {
             currentSpeed = runSpeed;
             if (armaScript != null) armaScript.precisionActual = armaScript.precisionDesdeCadera * 1.5f;
@@ -273,62 +323,117 @@ public class PlayerController : MonoBehaviour
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
         Vector3 moveDirection = transform.right * x + transform.forward * z;
-        rb.velocity = new Vector3(moveDirection.x * currentSpeed, rb.velocity.y, moveDirection.z * currentSpeed);
-    }
 
-    void HandleJumping()
-    {
-        if (Input.GetButtonDown("Jump") && canJump)
+        if (controller.isGrounded)
         {
-            rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
-            canJump = false;
-            if (armaScript != null) armaScript.precisionActual = armaScript.precisionDesdeCadera * 2.0f;
+            if (isFalling)
+            {
+                float fallDistance = lastGroundedY - transform.position.y;
+                if (fallDistance > fallThreshold)
+                {
+                    float damage = (fallDistance - fallThreshold) * fallDamageMultiplier;
+                    RecibirDaño(damage);
+                }
+                isFalling = false;
+            }
+            lastGroundedY = transform.position.y;
+            verticalVelocity = -1f;
+            if (Input.GetButtonDown("Jump"))
+            {
+                verticalVelocity = jumpForce;
+            }
         }
-    }
-
-    void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Ground"))
+        else
         {
-            canJump = true;
+            if (!isFalling)
+            {
+                isFalling = true;
+            }
+            verticalVelocity += gravity * Time.deltaTime;
         }
+
+        moveDirection.y = verticalVelocity;
+        controller.Move(moveDirection * currentSpeed * Time.deltaTime);
     }
 
-
-    public void Heal(int amount)
+    void CheckFallDamage()
     {
-        currentHealth += amount;
-        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
-        healthBar.SetHealth(currentHealth);
-    }
-
-
-    void OnCollisionExit(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Ground"))
+        if (controller.isGrounded && isFalling)
         {
-            canJump = false;
+            float fallDistance = lastGroundedY - transform.position.y;
+            if (fallDistance > fallThreshold)
+            {
+                float damage = (fallDistance - fallThreshold) * fallDamageMultiplier;
+                RecibirDaño(damage);
+            }
+            isFalling = false;
         }
-    }
-    public void adjuAdjustSpeed(float amount)
-    {
-        speed += amount;
-    }
-
-    public void AdjustFearDecrement(float multiplier)
-    {
-        decrementoMiedo *= multiplier;
+        else if (!controller.isGrounded)
+        {
+            if (!isFalling)
+            {
+                lastGroundedY = transform.position.y;
+                isFalling = true;
+            }
+        }
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("DoorTrigger")) // Asegúrate de que el tag "DoorTrigger" esté configurado en el trigger de la puerta
+        if (other.CompareTag("PuertaPuzzle"))
+        {
+            PuertaAbiertaPuzzle puerta = other.GetComponent<PuertaAbiertaPuzzle>();
+            if (puerta != null)
+            {
+                puerta.SetPlayerCerca(true);
+                puerta.SetPlayerInventory(keyInventory);
+                Debug.Log("SetPlayerInventory called.");
+            }
+        }
+        if (other.CompareTag("DoorTrigger"))
         {
             inTriggerZone = true;
             currentDoor = other.GetComponentInParent<DoorController>();
-
+        }
+        if (other.CompareTag("ItemThoughtTrigger"))
+        {
+            ItemThoughtTrigger thoughtTrigger = other.GetComponent<ItemThoughtTrigger>();
+            if (thoughtTrigger != null)
+            {
+                thoughtTrigger.thoughtDisplay = thoughtDisplay;
+                thoughtTrigger.inspectPrompt = inspectPrompt;
+                thoughtTrigger.itemFoundMessage = itemFoundMessage;
+                thoughtTrigger.ShowInspectPrompt();
+            }
         }
     }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("PuertaPuzzle"))
+        {
+            PuertaAbiertaPuzzle puerta = other.GetComponent<PuertaAbiertaPuzzle>();
+            if (puerta != null)
+            {
+                puerta.SetPlayerCerca(false);
+            }
+        }
+        if (other.CompareTag("DoorTrigger"))
+        {
+            inTriggerZone = false;
+            currentDoor = null;
+        }
+        if (other.CompareTag("ItemThoughtTrigger"))
+        {
+            ItemThoughtTrigger thoughtTrigger = other.GetComponent<ItemThoughtTrigger>();
+            if (thoughtTrigger != null)
+            {
+                thoughtTrigger.HideInspectPrompt();
+                thoughtTrigger.HideThought();
+            }
+        }
+    }
+
     public void AdjustFearIncrement(float amount, float duration)
     {
         StartCoroutine(AdjustFearIncrementCoroutine(amount, duration));
@@ -337,10 +442,11 @@ public class PlayerController : MonoBehaviour
     private IEnumerator AdjustFearIncrementCoroutine(float amount, float duration)
     {
         incrementoMiedo -= amount;
-        incrementoMiedo = Mathf.Max(0, incrementoMiedo); // Ensure increment is not negative
+        incrementoMiedo = Mathf.Max(0, incrementoMiedo);
         yield return new WaitForSeconds(duration);
         incrementoMiedo += amount;
     }
+
     public void AdjustSpeed(float amount, float duration)
     {
         StartCoroutine(AdjustSpeedCoroutine(amount, duration));
@@ -352,6 +458,7 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(duration);
         speed -= amount;
     }
+
     public void SetFearIncrement(float targetValue, float duration)
     {
         StartCoroutine(SetFearIncrementCoroutine(targetValue, duration));
@@ -364,15 +471,11 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(duration);
         incrementoMiedo = originalIncrementoMiedo;
     }
-    void OnTriggerExit(Collider other)
+
+    public void Heal(int amount)
     {
-        if (other.CompareTag("DoorTrigger"))
-        {
-            inTriggerZone = false;
-            currentDoor = null;
-
-
-        }
+        currentHealth += amount;
+        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        healthBar.SetHealth(currentHealth);
     }
-
 }

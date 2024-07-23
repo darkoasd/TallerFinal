@@ -58,10 +58,30 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3677767966759173585, guid: 16ffe0d298abdad47910a73b9bc1dddb,
+        type: 3}
+      propertyPath: m_Size.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3677767966759173585, guid: 16ffe0d298abdad47910a73b9bc1dddb,
+        type: 3}
+      propertyPath: m_Size.y
+      value: 24.041187
+      objectReference: {fileID: 0}
+    - target: {fileID: 3677767966759173585, guid: 16ffe0d298abdad47910a73b9bc1dddb,
+        type: 3}
+      propertyPath: m_Size.z
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3677767966759173585, guid: 16ffe0d298abdad47910a73b9bc1dddb,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 8.020596
+      objectReference: {fileID: 0}
     - target: {fileID: 6323948426962973085, guid: 16ffe0d298abdad47910a73b9bc1dddb,
         type: 3}
       propertyPath: m_Name
-      value: InciensoPurificador Variant
+      value: InciensoPurificador
       objectReference: {fileID: 0}
     - target: {fileID: 6323948426962973085, guid: 16ffe0d298abdad47910a73b9bc1dddb,
         type: 3}

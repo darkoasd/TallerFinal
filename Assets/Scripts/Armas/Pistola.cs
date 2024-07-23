@@ -6,16 +6,15 @@ using TMPro;
 public class Pistola : Arma
 {
     public GameObject bulletHolePrefab;
-    public LayerMask ignoreLayers;  // Define aquí las capas a ignorar
-    public float bulletHoleLifetime = 5f;  // Tiempo en segundos antes de destruir el bulletHole
-
-    // UI
+    public LayerMask ignoreLayers;
+    public float bulletHoleLifetime = 5f;
     public TextMeshProUGUI textoMunicion;
+
     public override void Disparar()
     {
-        if (GameManager.instance.IsInventoryOpen())  // Suponiendo que añades este método en GameManager
+        if (GameManager.instance.IsInventoryOpen())
         {
-            return;  // No disparar si el inventario está abierto
+            return;
         }
         if (municionEnCargador > 0 && Time.time >= tiempoUltimoDisparo + tiempoEntreDisparos)
         {
@@ -29,7 +28,6 @@ public class Pistola : Arma
             Vector3 direction = CalcularDireccionDisparo();
 
             RaycastHit hit;
-            // Asegúrate de configurar correctamente la LayerMask en el inspector de Unity
             if (Physics.Raycast(cameraTransform.position, direction, out hit, rango, ~ignoreLayers))
             {
                 if (bulletHolePrefab != null && hit.collider.GetComponent<Enemy>() == null)
@@ -38,10 +36,15 @@ public class Pistola : Arma
                     Destroy(createdBulletHole, bulletHoleLifetime);
                 }
 
-                Enemy saludEnemigo = hit.collider.GetComponent<Enemy>();
+                Enemy saludEnemigo = hit.collider.GetComponentInParent<Enemy>();
                 if (saludEnemigo != null)
                 {
-                    saludEnemigo.RecibirDaño(daño, cameraTransform.position);
+                    string parteDelCuerpo = hit.collider.CompareTag("Cabeza") ? "Cabeza" : "Cuerpo";
+                    saludEnemigo.RecibirDaño(daño, cameraTransform.position, parteDelCuerpo);
+                }
+                else
+                {
+                    Debug.LogWarning("saludEnemigo es null. Asegúrate de que el enemigo tenga el componente Enemy.");
                 }
 
                 ObjetoDestruible destructibleTarget = hit.collider.GetComponent<ObjetoDestruible>();
@@ -56,6 +59,7 @@ public class Pistola : Arma
             Debug.Log("Sin munición, presione 'R' para recargar.");
         }
     }
+
     public void IncrementarMunicionDeReserva(int cantidad)
     {
         municionDeReserva += cantidad;

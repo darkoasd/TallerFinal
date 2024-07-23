@@ -30,7 +30,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 105.45, y: 1.83, z: -6.3}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.85175, y: 0.1024, z: 0.33199188}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -63,7 +63,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5434b213a85a8e5478035d319c0149db, type: 2}
+  - {fileID: -876546973899608171, guid: e3642f4ea5812b54e942a584da8e1462, type: 3}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -104,8 +104,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 8, y: 8, z: 8}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 8, y: 43.535225, z: 18.000443}
+  m_Center: {x: 0, y: 17.767618, z: -0.03611268}
 --- !u!114 &1581530503728991291
 MonoBehaviour:
   m_ObjectHideFlags: 0

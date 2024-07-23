@@ -9,26 +9,22 @@ public class Escopeta : Arma
     public int numBalas = 8;             // Número de balas disparadas en un solo tiro
     public float spreadAngle = 15f;      // Ángulo de dispersión de las balas
     public LayerMask groundLayer;        // Máscara de capa específica para el "suelo"
-
     public TextMeshProUGUI textoMunicion;
-
-
 
     protected override void Start()
     {
         base.Start();
         ActualizarTextoMunicion();
     }
+
     public override void Disparar()
     {
-
         if (municionEnCargador > 0 && Time.time >= tiempoUltimoDisparo + tiempoEntreDisparos)
         {
             tiempoUltimoDisparo = Time.time;
             municionEnCargador--;
             ActualizarTextoMunicion();
             animator.SetBool("DisparandoEscopeta", true);
-
 
             for (int i = 0; i < numBalas; i++)
             {
@@ -55,11 +51,13 @@ public class Escopeta : Arma
                         }
                     }
 
-                    Enemy saludEnemigo = hit.collider.GetComponent<Enemy>();
+                    Enemy saludEnemigo = hit.collider.GetComponentInParent<Enemy>();
                     if (saludEnemigo != null)
                     {
-                        saludEnemigo.RecibirDaño(daño, spread);
+                        string parteDelCuerpo = hit.collider.CompareTag("Cabeza") ? "Cabeza" : "Cuerpo";
+                        saludEnemigo.RecibirDaño(daño, Camera.main.transform.position, parteDelCuerpo);
                     }
+
                     ObjetoDestruible destructibleTarget = hit.collider.GetComponent<ObjetoDestruible>();
                     if (destructibleTarget != null)
                     {
@@ -74,12 +72,13 @@ public class Escopeta : Arma
             Debug.Log("Sin munición, presione 'R' para recargar.");  // Recordatorio para recargar
         }
     }
+
     public void IncrementarMunicionDeReserva(int cantidad)
     {
         municionDeReserva += cantidad;
         ActualizarTextoMunicion();
-        // Actualiza la UI o cualquier otra lógica necesaria
     }
+
     IEnumerator ResetDisparandoEstado()
     {
         yield return new WaitForSeconds(0.1f); // Ajusta este tiempo según la animación de disparo
@@ -120,6 +119,7 @@ public class Escopeta : Arma
         }
         animator.SetBool("ApuntandoEscopeta", Input.GetButton("Fire2"));
     }
+
     private void OnEnable()
     {
         if (textoMunicion != null)
@@ -136,5 +136,4 @@ public class Escopeta : Arma
             textoMunicion.gameObject.SetActive(false);
         animator.SetBool("ConEscopeta", false);
     }
-
 }

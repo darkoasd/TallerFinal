@@ -49,7 +49,7 @@ public abstract class Arma : MonoBehaviour
         tiempoUltimoDisparo = -tiempoEntreDisparos;
         precisionActual = precisionDesdeCadera;
         municionEnCargador = capacidadCargador;
-        municionDeReserva = 21; // Asumiendo que empiezas con 90 balas de reserva.
+       
     }
    
     protected void AplicarRecoil()

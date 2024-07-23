@@ -3,24 +3,29 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
-public enum EstadoEnemigo { Patrullando, Persiguiendo, Atacando, Investigando }
+public enum EstadoEnemigo
+{
+    Patrullando,
+    Persiguiendo,
+    Atacando,
+    Investigando
+}
+
 public abstract class Enemy : MonoBehaviour
 {
     public float saludMaxima = 100f;
     public float dañoDeAtaque = 10f;
     public float velocidad = 3.5f;
     public float rangoDeVisión = 10f;
-    public LayerMask capaDelJugador; // Define qué capa(s) pertenece(n) al jugador para la detección
-    public LayerMask capaDeObstáculos; // Capa(s) que contienen obstáculos que bloquean la visión
+    public LayerMask capaDelJugador;
+    public LayerMask capaDeObstáculos;
 
     public float campoDeVision = 120f;
-
     public float saludActual;
     protected NavMeshAgent agente;
     protected Transform objetivo;
     public float distanciaDeParadaAtaque = 2f;
 
-    //Attack
     public float tiempoEntreAtaques = 2f;
     private float temporizadorAtaque;
     public float rangoDeAtaque = 3f;
@@ -28,189 +33,208 @@ public abstract class Enemy : MonoBehaviour
 
     public float tiempoDeRecuperacionDespuesDeAtaque = 2f;
     private float temporizadorRecuperacion;
+
+    public EstadoEnemigo estadoActual = EstadoEnemigo.Patrullando;
+    protected bool isAlive = true;
+
+    // Nueva parte para los sonidos
+    public AudioClip[] sonidos;
+    public float intervaloSonidos = 5f;
+    private float temporizadorSonidos;
+    private AudioSource audioSource;
+
+    public float audioVolume = 1f;
+    public float audioMinDistance = 1f;
+    public float audioMaxDistance = 10f;
+
     protected virtual void Start()
     {
         saludActual = saludMaxima;
         agente = GetComponent<NavMeshAgent>();
         agente.speed = velocidad;
-        objetivo = GameObject.FindGameObjectWithTag("Player").transform; // Asume que el jugador tiene el tag "Player"
+        objetivo = GameObject.FindGameObjectWithTag("Player").transform;
+
+        // Inicialización de AudioSource
+        audioSource = gameObject.AddComponent<AudioSource>();
+        audioSource.volume = audioVolume;
+        audioSource.spatialBlend = 1.0f; // 3D sound
+        audioSource.minDistance = audioMinDistance;
+        audioSource.maxDistance = audioMaxDistance;
+        audioSource.rolloffMode = AudioRolloffMode.Linear; // O usar AudioRolloffMode.Logarithmic
+        audioSource.dopplerLevel = 0;
+
+        temporizadorSonidos = intervaloSonidos;
     }
 
     protected virtual void Update()
     {
+        if (!isAlive) return;
 
-        if (temporizadorRecuperacion > 0)
-        {
-            temporizadorRecuperacion -= Time.deltaTime;
-            if (temporizadorRecuperacion <= 0)
-            {
-                agente.isStopped = false; // Permite que el agente comience a moverse nuevamente
-            }
-            return; // Evita que el resto del código se ejecute mientras el enemigo se esté recuperando
-        }
         temporizadorAtaque += Time.deltaTime;
-        if (objetivo == null) return;
-        if (estaAtacando)
+        temporizadorRecuperacion -= Time.deltaTime;
+        temporizadorSonidos -= Time.deltaTime;
+
+        if (temporizadorRecuperacion <= 0 && agente.isOnNavMesh)
         {
-            // Considera no hacer nada más si está atacando, o manejar lógicas específicas de ataque aquí
-            return;
+            agente.isStopped = false;
         }
+
+        if (temporizadorSonidos <= 0)
+        {
+            ReproducirSonidoAleatorio();
+            temporizadorSonidos = intervaloSonidos;
+        }
+
+        switch (estadoActual)
+        {
+            case EstadoEnemigo.Patrullando:
+                Patrullar();
+                DetectarJugadorYPerseguir();
+                break;
+            case EstadoEnemigo.Persiguiendo:
+                PerseguirJugador();
+                break;
+            case EstadoEnemigo.Atacando:
+                break;
+            case EstadoEnemigo.Investigando:
+                break;
+        }
+    }
+
+    protected void ReproducirSonidoAleatorio()
+    {
+        if (sonidos.Length > 0)
+        {
+            int index = Random.Range(0, sonidos.Length);
+            audioSource.clip = sonidos[index];
+            audioSource.Play();
+        }
+    }
+
+    protected void PerseguirJugador()
+    {
+        if (estaAtacando || !isAlive) return;
 
         float distanciaAlJugador = Vector3.Distance(transform.position, objetivo.position);
-
-        Vector3 dirHaciaJugador = (objetivo.position - transform.position).normalized;
-        float anguloHaciaJugador = Vector3.Angle(transform.forward, dirHaciaJugador);
-
-        // Actualizar la distancia de parada según si el enemigo está listo para atacar o no
-        agente.stoppingDistance = (distanciaAlJugador <= rangoDeAtaque && temporizadorAtaque >= tiempoEntreAtaques) ? distanciaDeParadaAtaque : 0f;
-
-        if (distanciaAlJugador <= rangoDeVisión && anguloHaciaJugador <= campoDeVision / 2f && !estaAtacando)
-        {
-            if (!Physics.Linecast(transform.position, objetivo.position, capaDeObstáculos))
-            {
-                agente.SetDestination(objetivo.position);
-            }
-        }
-        else
-        {
-            Patrullar();
-        }
-
-        if (distanciaAlJugador <= rangoDeAtaque && temporizadorAtaque >= tiempoEntreAtaques && !Physics.Linecast(transform.position, objetivo.position, capaDeObstáculos))
+        if (distanciaAlJugador <= rangoDeAtaque && temporizadorAtaque >= tiempoEntreAtaques)
         {
             Atacar();
             temporizadorAtaque = 0f;
         }
+        else
+        {
+            if (agente.isOnNavMesh)
+            {
+                agente.SetDestination(objetivo.position);
+            }
+        }
+
+        if (distanciaAlJugador > rangoDeVisión)
+        {
+            estadoActual = EstadoEnemigo.Patrullando;
+        }
     }
+
     protected void Atacar()
     {
-        if (temporizadorAtaque < tiempoEntreAtaques) return; // Asegura que solo ataque cada cierto tiempo
+        if (temporizadorAtaque < tiempoEntreAtaques || !isAlive) return;
 
         estaAtacando = true;
-        agente.isStopped = true; // Detiene el movimiento del enemigo durante el ataque
-        Debug.Log("Enemigo ataca");
+        agente.isStopped = true;
         objetivo.GetComponent<PlayerController>().RecibirDaño(dañoDeAtaque);
-
-        temporizadorAtaque = 0; // Reinicia el temporizador de ataque
-
+        temporizadorRecuperacion = tiempoDeRecuperacionDespuesDeAtaque;
         StartCoroutine(EsperarDespuesDeAtacar());
     }
+
     IEnumerator EsperarDespuesDeAtacar()
     {
-        yield return new WaitForSeconds(tiempoDeRecuperacionDespuesDeAtaque); // Tiempo de espera después de atacar
-
-        // Aquí puedes opcionalmente mover el enemigo ligeramente para simular un "retroceso"
+        yield return new WaitForSeconds(tiempoDeRecuperacionDespuesDeAtaque);
         MoverseAPosicionAleatoriaDespuesDeAtacar();
-
-        yield return new WaitForSeconds(1f); // Espera adicional para permitir el reposicionamiento
-
+        yield return new WaitForSeconds(1f);
         estaAtacando = false;
-        agente.isStopped = false; // Permite que el enemigo vuelva a moverse
     }
+
     void MoverseAPosicionAleatoriaDespuesDeAtacar()
     {
-        // Genera una dirección aleatoria para moverse
-        Vector3 direccionAleatoria = Random.insideUnitSphere * 3f; // 3 metros de radio para el movimiento
+        if (!isAlive) return;
+
+        Vector3 direccionAleatoria = Random.insideUnitSphere * 3f;
         direccionAleatoria += transform.position;
-        direccionAleatoria.y = transform.position.y; // Mantén la misma altura
+        direccionAleatoria.y = transform.position.y;
 
         NavMeshHit hit;
         if (NavMesh.SamplePosition(direccionAleatoria, out hit, 3f, NavMesh.AllAreas))
         {
-            agente.SetDestination(hit.position);
+            if (agente.isOnNavMesh)
+            {
+                agente.SetDestination(hit.position);
+            }
         }
     }
 
     protected virtual void DetectarJugadorYPerseguir()
     {
-        if (objetivo == null || estaAtacando) return;
+        if (objetivo == null || estaAtacando || !isAlive) return;
 
         float distanciaAlJugador = Vector3.Distance(transform.position, objetivo.position);
         Vector3 dirHaciaJugador = (objetivo.position - transform.position).normalized;
         float anguloHaciaJugador = Vector3.Angle(transform.forward, dirHaciaJugador);
 
-        // Suponiendo un campo de visión de 120 grados (60 grados a cada lado de la dirección en la que mira el enemigo)
         if (distanciaAlJugador <= rangoDeVisión && anguloHaciaJugador <= campoDeVision / 2f)
         {
-            // Verifica si hay línea de visión directa con el jugador
             if (!Physics.Linecast(transform.position, objetivo.position, capaDeObstáculos))
             {
-                // No hay obstáculos, sigue al jugador
-                agente.SetDestination(objetivo.position);
-            }
-            else
-            {
-                // Hay un obstáculo entre el enemigo y el jugador, implementar comportamiento de patrulla o espera
-                Patrullar();
+                estadoActual = EstadoEnemigo.Persiguiendo;
             }
         }
-        else
+    }
+
+    protected abstract void Patrullar();
+
+    public virtual void RecibirDaño(float cantidad, Vector3 posicionDisparo, string parteDelCuerpo)
+    {
+        if (!isAlive) return;
+
+        float dañoFinal = cantidad;
+        if (parteDelCuerpo == "Cabeza")
         {
-            // Jugador fuera del campo de visión, implementar comportamiento de patrulla o espera
-            Patrullar();
+            dañoFinal *= 2;
         }
-    }
-    void OnDrawGizmosSelected()
-    {
-        // Dibuja una línea hacia adelante desde el enemigo
-        Gizmos.color = Color.blue;
-        Gizmos.DrawRay(transform.position, transform.forward * rangoDeVisión);
 
-        // Dibuja las líneas del campo de visión
-        Vector3 rightLimit = Quaternion.Euler(0, campoDeVision / 2, 0) * transform.forward * rangoDeVisión;
-        Vector3 leftLimit = Quaternion.Euler(0, -campoDeVision / 2, 0) * transform.forward * rangoDeVisión;
-
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(transform.position, rightLimit);
-        Gizmos.DrawRay(transform.position, leftLimit);
-
-        // Dibuja un arco para el campo de visión
-        Gizmos.color = Color.yellow;
-        Vector3 startAngle = Quaternion.Euler(0, -campoDeVision / 2, 0) * transform.forward;
-        Vector3 endAngle = Quaternion.Euler(0, campoDeVision / 2, 0) * transform.forward;
-        DrawArc(transform.position, startAngle, endAngle, rangoDeVisión, 30);
-    }
-
-    // Método auxiliar para dibujar el arco del campo de visión
-    void DrawArc(Vector3 center, Vector3 startDirection, Vector3 endDirection, float radius, int segments)
-    {
-        float angle = Vector3.Angle(startDirection, endDirection) / segments;
-        Vector3 previousPoint = center + startDirection.normalized * radius;
-        Vector3 nextPoint = Vector3.zero;
-
-        for (int i = 1; i <= segments; i++)
-        {
-            nextPoint = center + (Quaternion.Euler(0, angle * i, 0) * startDirection.normalized) * radius;
-            Gizmos.DrawLine(previousPoint, nextPoint);
-            previousPoint = nextPoint;
-        }
-    }
-
-    protected abstract void Patrullar(); // Método abstracto para ser implementado por clases derivadas
-
-    public void RecibirDaño(float cantidad, Vector3 posicionDisparo)
-    {
-        saludActual -= cantidad;
+        saludActual -= dañoFinal;
         if (saludActual <= 0f)
         {
             Morir();
         }
         else
         {
-            Investigar(posicionDisparo);
-        }
-    }
-    protected void Investigar(Vector3 origenDisparo)
-    {
-        if (Vector3.Distance(transform.position, origenDisparo) > 5f)  // Solo reacciona si el disparo vino de lejos
-        {
-            agente.SetDestination(origenDisparo);
+            estadoActual = EstadoEnemigo.Persiguiendo;
+            if (agente.isOnNavMesh && isAlive)
+            {
+                agente.SetDestination(posicionDisparo);
+            }
         }
     }
 
     protected virtual void Morir()
     {
-        // Implementar lógica de muerte, como reproducir animación y destruir el objeto
+        isAlive = false;
+        if (agente.isOnNavMesh)
+        {
+            agente.isStopped = true;
+        }
         Destroy(gameObject);
+    }
+
+    // Método para visualizar el rango de audio en el editor
+    private void OnDrawGizmosSelected()
+    {
+        if (audioSource == null) return;
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, audioMinDistance);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, audioMaxDistance);
     }
 }

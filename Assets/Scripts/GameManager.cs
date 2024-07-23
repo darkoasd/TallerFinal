@@ -13,6 +13,9 @@ public class GameManager : MonoBehaviour
     public GameObject pauseMenuUI;
     public GameObject inventoryButtons;
 
+    public GameObject craftScreen;
+    public GameObject craftScreenInfo;
+    private bool isCraftActive = false;
     void Awake()
     {
         if (instance != null)
@@ -23,7 +26,13 @@ public class GameManager : MonoBehaviour
         instance = this;
         DontDestroyOnLoad(gameObject);
     }
+    public void ActivarCraft()
+    {
+        isCraftActive = !isCraftActive; 
 
+        craftScreen.SetActive(isCraftActive);
+        craftScreenInfo.SetActive(isCraftActive);
+    }
     void Start()
     {
         Cursor.visible = false;

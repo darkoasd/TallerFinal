@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class KeyPickup : MonoBehaviour
 {
-    public string keyId;
     public KeyItem key; // Usa el objeto KeyItem en lugar de solo el keyId
 
     private bool isPlayerInTrigger = false;
@@ -28,8 +27,7 @@ public class KeyPickup : MonoBehaviour
         if (isPlayerInTrigger && Input.GetKeyDown(KeyCode.E) && playerInventory != null)
         {
             playerInventory.AddKey(key);
-            
-            Debug.Log("Llave recogida: " + key.itemName);
+            Debug.Log("Llave recogida: " + key.itemName + " con ID: " + key.keyId);
             Destroy(gameObject); // Eliminar la llave del juego.
         }
     }

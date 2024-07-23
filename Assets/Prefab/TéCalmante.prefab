@@ -58,10 +58,20 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3677767966759173585, guid: 16ffe0d298abdad47910a73b9bc1dddb,
+        type: 3}
+      propertyPath: m_Size.y
+      value: 29.415138
+      objectReference: {fileID: 0}
+    - target: {fileID: 3677767966759173585, guid: 16ffe0d298abdad47910a73b9bc1dddb,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 10.707564
+      objectReference: {fileID: 0}
     - target: {fileID: 6323948426962973085, guid: 16ffe0d298abdad47910a73b9bc1dddb,
         type: 3}
       propertyPath: m_Name
-      value: "T\xE9Calmante Variant"
+      value: "T\xE9Calmante"
       objectReference: {fileID: 0}
     - target: {fileID: 6670263073616283193, guid: 16ffe0d298abdad47910a73b9bc1dddb,
         type: 3}

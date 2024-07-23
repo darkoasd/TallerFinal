@@ -17,7 +17,7 @@ PrefabInstance:
     - target: {fileID: 2206795597191543711, guid: b6d882daa85cd6c4db163b1ce5bcace1,
         type: 3}
       propertyPath: m_Name
-      value: Tabaco Variant
+      value: Tabaco
       objectReference: {fileID: 0}
     - target: {fileID: 3393022347293725274, guid: b6d882daa85cd6c4db163b1ce5bcace1,
         type: 3}
@@ -73,6 +73,16 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8820650661818824659, guid: b6d882daa85cd6c4db163b1ce5bcace1,
+        type: 3}
+      propertyPath: m_Size.y
+      value: 23.069757
+      objectReference: {fileID: 0}
+    - target: {fileID: 8820650661818824659, guid: b6d882daa85cd6c4db163b1ce5bcace1,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 7.5348825
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

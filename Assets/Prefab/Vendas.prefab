@@ -17,13 +17,13 @@ PrefabInstance:
     - target: {fileID: 2206795597191543711, guid: b6d882daa85cd6c4db163b1ce5bcace1,
         type: 3}
       propertyPath: m_Name
-      value: Vendas Variant
+      value: Vendas
       objectReference: {fileID: 0}
     - target: {fileID: 3393022347293725274, guid: b6d882daa85cd6c4db163b1ce5bcace1,
         type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
-      objectReference: {fileID: 2100000, guid: 25fc16ba354f54b46b15b0c20326b228, type: 2}
+      objectReference: {fileID: 2100000, guid: 540ada7aa94cc8941bb937d8f474f990, type: 2}
     - target: {fileID: 5193817755044408154, guid: b6d882daa85cd6c4db163b1ce5bcace1,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -73,6 +73,26 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8820650661818824659, guid: b6d882daa85cd6c4db163b1ce5bcace1,
+        type: 3}
+      propertyPath: m_Size.y
+      value: 60.00827
+      objectReference: {fileID: 0}
+    - target: {fileID: 8820650661818824659, guid: b6d882daa85cd6c4db163b1ce5bcace1,
+        type: 3}
+      propertyPath: m_Size.z
+      value: 17.315203
+      objectReference: {fileID: 0}
+    - target: {fileID: 8820650661818824659, guid: b6d882daa85cd6c4db163b1ce5bcace1,
+        type: 3}
+      propertyPath: m_Center.y
+      value: 9.575872
+      objectReference: {fileID: 0}
+    - target: {fileID: 8820650661818824659, guid: b6d882daa85cd6c4db163b1ce5bcace1,
+        type: 3}
+      propertyPath: m_Center.z
+      value: 0.26892838
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

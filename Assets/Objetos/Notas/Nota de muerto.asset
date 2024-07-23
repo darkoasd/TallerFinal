@@ -16,4 +16,5 @@ MonoBehaviour:
   itemImage: {fileID: 21300000, guid: 36eb14b6700a805478778501aa19656c, type: 3}
   itemDescription: Nota de llave
   noteText: Nadie pensaba que la ciudad quedaria tan sola, ahora solo me queda esperar
-    y ser paciente. Si alguien lee esto deje la llave en la bodega
+    y ser paciente. Si alguien lee esto la llave del porton quedo en el almacen,
+    cerca de la plaza principal
